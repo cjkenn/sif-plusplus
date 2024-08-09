@@ -3,4 +3,4 @@
 
 using namespace sif;
 
-void Driver::run() { Lexer l = Lexer(); }
+void Driver::run() { Lexer l = Lexer(filename_); }
