@@ -20,6 +20,7 @@ enum TknTy {
   TKN_MINUS,
   TKN_STAR,
   TKN_SLASH,
+  TKN_PERCENT,
   TKN_AMP,
   TKN_PIPE,
   TKN_AT,
@@ -37,14 +38,27 @@ enum TknTy {
   TKN_IDENT,
   TKN_STRLIT,
   TKN_NUMLIT,
-  TKN_EOF
+  TKN_EOF,
+
+  // Reserved word tokens
+  TKN_IF,
+  TKN_ELIF,
+  TKN_ELSE,
+  TKN_VAR,
+  TKN_FN,
+  TKN_RET,
+  TKN_TABLE,
+  TKN_ARRAY,
+  TKN_FOR,
+  TKN_IN,
+  TKN_TRUE,
+  TKN_FALSE
 };
 
 class Token {
 public:
-  Token(TknTy ty, int len, int pos, int line) {
+  Token(TknTy ty, int pos, int line) {
     ty_ = ty;
-    len_ = len;
     pos_ = pos;
     line_ = line;
   }
@@ -52,13 +66,11 @@ public:
   ~Token(){};
 
   TknTy GetTy() const { return ty_; }
-  int GetLen() const { return len_; }
   int GetPos() const { return pos_; }
   int GetLine() const { return line_; }
 
 private:
   TknTy ty_;
-  int len_;
   int pos_;
   int line_;
 };
