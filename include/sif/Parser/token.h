@@ -26,5 +26,5 @@ private:
   int len_;
   int pos_;
   int line_;
-}
+};
 } // namespace sif

@@ -1,8 +1,8 @@
-#include "Lexer.h"
-#include "Token.h"
+#include "sif/Parser/lexer.h"
+#include "sif/Parser/token.h"
 #include <string>
 
 using namespace sif;
 
 Lexer::Lexer(std::string source) {}
-Token Lexer::Next() { return null; }
+Token Lexer::Next() { return Token(); }

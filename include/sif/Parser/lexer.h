@@ -7,7 +7,7 @@ namespace sif {
 class Lexer {
 public:
   Lexer(){};
-  Lexer(std::string source){};
+  Lexer(std::string source);
   ~Lexer(){};
 
   Token Next();
