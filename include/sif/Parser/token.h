@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 namespace sif {
 enum TknTy {
   // Single character tokens
@@ -68,10 +70,22 @@ public:
   TknTy GetTy() const { return ty_; }
   int GetPos() const { return pos_; }
   int GetLine() const { return line_; }
+  std::optional<std::string> GetStringLit() const { return str_lit_; }
+  std::optional<std::string> GetIdentLit() const { return ident_lit_; }
+  std::optional<std::string> GetNumLit() const { return num_lit_; }
+  void SetPos(int pos) { pos_ = pos; }
+  void SetLine(int line) { line_ = line; }
+  void SetStrLit(std::string lit) { str_lit_ = lit; }
+  void SetIdentLit(std::string lit) { ident_lit_ = lit; }
+  void SetNumLit(std::string lit) { num_lit_ = lit; }
 
 private:
   TknTy ty_;
   int pos_;
   int line_;
+  // TODO: this should be a class that extends an abstract class Token
+  std::optional<std::string> str_lit_;
+  std::optional<std::string> ident_lit_;
+  std::optional<std::string> num_lit_;
 };
 } // namespace sif
