@@ -224,11 +224,12 @@ Token Lexer::lex_num_lit() {
 
   bool dot_allowed = true;
   while (!finished() && curr_char_.has_value() &&
-         (isdigit(curr_char_.value()) || curr_char_ == '.')) {
-    assert((curr_char_.value() == '.' && dot_allowed) &&
-           "incorrectly formatted number!");
-
+         (isdigit(curr_char_.value()) || curr_char_.value() == '.')) {
     if (curr_char_.value() == '.') {
+      if (!dot_allowed) {
+        // TODO: proper error here
+        assert(false && "incorrectly formatted number!");
+      }
       dot_allowed = false;
     }
     literal += curr_char_.value();
@@ -243,7 +244,8 @@ Token Lexer::lex_ident() {
   int ident_start = curr_pos_;
   int ident_line = curr_line_;
 
-  while (!finished() && curr_char_.has_value() && isalpha(curr_char_.value())) {
+  while (!finished() && curr_char_.has_value() &&
+         std::isalpha(curr_char_.value())) {
     literal += curr_char_.value();
     advance();
   }
@@ -290,7 +292,7 @@ std::optional<char> Lexer::peek() {
 
 void Lexer::advance() {
   bool on_new_line = curr_char_ == '\n';
-  if (curr_line_ == buffer_.size() - 1 || on_new_line) {
+  if (curr_pos_ == buffer_[curr_line_].size() - 1 || on_new_line) {
     next_line();
   } else {
     curr_pos_++;
@@ -307,8 +309,6 @@ void Lexer::next_line() {
   curr_line_++;
   curr_pos_ = 0;
 }
-
-bool Lexer::finished() { return curr_line_ >= buffer_.size(); }
 
 void Lexer::skip_whitespace() {
   while (std::isspace(curr_char_.value())) {

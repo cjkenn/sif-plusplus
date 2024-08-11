@@ -8,5 +8,5 @@ using namespace sif;
 void Driver::run() {
   Lexer l = Lexer(filename_);
   Token first = l.Lex();
-  std::cout << first.GetIdentLit().value();
+  std::cout << "ident: " << first.GetNumLit().value();
 }

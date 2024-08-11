@@ -15,6 +15,8 @@ public:
   Token Lex();
 
 private:
+  inline bool finished() { return curr_line_ >= buffer_.size(); }
+
   void advance();
   Token lex_str_lit();
   Token lex_num_lit();
@@ -25,7 +27,6 @@ private:
   std::optional<char> peek();
   void skip_whitespace();
   void next_line();
-  bool finished();
 
   std::vector<std::string> buffer_;
   std::optional<char> curr_char_;
