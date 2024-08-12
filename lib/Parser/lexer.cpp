@@ -34,12 +34,12 @@ Lexer::Lexer(std::string filename) {
 
 Token Lexer::Lex() {
   if (!curr_char_.has_value()) {
-    return Token(TKN_EOF, curr_pos_, curr_line_);
+    return Token(TokenKind::Eof, curr_pos_, curr_line_);
   }
 
   skip_whitespace();
   if (!curr_char_.has_value()) {
-    return Token(TKN_EOF, curr_pos_, curr_line_);
+    return Token(TokenKind::Eof, curr_pos_, curr_line_);
   }
 
   while (curr_char_ == '#') {
@@ -48,7 +48,7 @@ Token Lexer::Lex() {
     next_line();
     advance();
     if (!curr_char_.has_value()) {
-      return Token(TKN_EOF, curr_pos_, curr_line_);
+      return Token(TokenKind::Eof, curr_pos_, curr_line_);
     }
   }
 
@@ -64,49 +64,49 @@ Token Lexer::Lex() {
 
   switch (curr) {
   case '(':
-    return consume(TKN_LPAREN);
+    return consume(TokenKind::LeftParen);
   case ')':
-    return consume(TKN_RPAREN);
+    return consume(TokenKind::RightParen);
   case '{':
-    return consume(TKN_LBRACE);
+    return consume(TokenKind::LeftBrace);
   case '}':
-    return consume(TKN_RBRACE);
+    return consume(TokenKind::RightBrace);
   case '[': {
     std::optional<char> next = peek();
     if (next.has_value() && next.value() == '[') {
-      Token result = consume(TKN_DOUBLELBRACK);
+      Token result = consume(TokenKind::DoubleLeftBracket);
       advance();
       return result;
     } else {
-      return consume(TKN_LBRACK);
+      return consume(TokenKind::LeftBracket);
     }
   }
   case ']': {
     std::optional<char> next = peek();
     if (next.has_value() && next.value() == ']') {
-      Token result = consume(TKN_DOUBLERBRACK);
+      Token result = consume(TokenKind::DoubleRightBracket);
       advance();
       return result;
     } else {
-      return consume(TKN_RBRACK);
+      return consume(TokenKind::RightBracket);
     }
   }
   case ';':
-    return consume(TKN_SEMICOLON);
+    return consume(TokenKind::Semicolon);
   case '.':
-    return consume(TKN_PERIOD);
+    return consume(TokenKind::Period);
   case ',':
-    return consume(TKN_COMMA);
+    return consume(TokenKind::Comma);
   case '+':
-    return consume(TKN_PLUS);
+    return consume(TokenKind::Plus);
   case '-':
-    return consume(TKN_MINUS);
+    return consume(TokenKind::Minus);
   case '*':
-    return consume(TKN_STAR);
+    return consume(TokenKind::Star);
   case '%':
-    return consume(TKN_PERCENT);
+    return consume(TokenKind::Percent);
   case '@':
-    return consume(TKN_AT);
+    return consume(TokenKind::At);
   case '/': {
     std::optional<char> next = peek();
     if (next.has_value() && next.value() == '/') {
@@ -115,77 +115,77 @@ Token Lexer::Lex() {
       }
       return Lex();
     } else {
-      return consume(TKN_SLASH);
+      return consume(TokenKind::Slash);
     }
   }
   case '=': {
     std::optional<char> next = peek();
     if (next.has_value() && next.value() == '=') {
-      Token result = consume(TKN_EQEQ);
+      Token result = consume(TokenKind::EqualEqual);
       advance();
       return result;
     } else if (next.has_value() && next.value() == '>') {
-      Token result = consume(TKN_EQARROW);
+      Token result = consume(TokenKind::EqualArrow);
       advance();
       return result;
     } else {
-      return consume(TKN_RBRACK);
+      return consume(TokenKind::Equal);
     }
   }
   case '<': {
     std::optional<char> next = peek();
     if (next.has_value() && next.value() == '=') {
-      Token result = consume(TKN_LTEQ);
+      Token result = consume(TokenKind::LessThanEqual);
       advance();
       return result;
     } else {
-      return consume(TKN_LT);
+      return consume(TokenKind::LessThan);
     }
   }
   case '>': {
     std::optional<char> next = peek();
     if (next.has_value() && next.value() == '=') {
-      Token result = consume(TKN_GTEQ);
+      Token result = consume(TokenKind::GreaterThanEqual);
       advance();
       return result;
     } else {
-      return consume(TKN_GT);
+      return consume(TokenKind::GreaterThan);
     }
   }
   case '!': {
     std::optional<char> next = peek();
     if (next.has_value() && next.value() == '=') {
-      Token result = consume(TKN_BANGEQ);
+      Token result = consume(TokenKind::BangEqual);
       advance();
       return result;
     } else {
-      return consume(TKN_BANG);
+      return consume(TokenKind::Bang);
     }
   }
   case '&': {
     std::optional<char> next = peek();
     if (next.has_value() && next.value() == '&') {
-      Token result = consume(TKN_AMPAMP);
+      Token result = consume(TokenKind::DoubleAmpersand);
       advance();
       return result;
     } else {
-      return consume(TKN_AMP);
+      return consume(TokenKind::Ampersand);
     }
   }
   case '|': {
     std::optional<char> next = peek();
     if (next.has_value() && next.value() == '|') {
-      Token result = consume(TKN_PIPEPIPE);
+      Token result = consume(TokenKind::DoublePipe);
       advance();
       return result;
     } else {
-      return consume(TKN_PIPE);
+      return consume(TokenKind::Pipe);
     }
   }
   case '"':
     return lex_str_lit();
   default:
-    return Token(TKN_EOF, 0, 0);
+    return Token(TokenKind::Eof, 0, 0);
   }
 }
 
@@ -214,7 +214,7 @@ Token Lexer::lex_str_lit() {
   // if we get here, we have no characters left to lex
   // but the string literal is unterminated.
   // TODO: collect and emit an error here
-  return Token(TKN_EOF, 0, 0);
+  return Token(TokenKind::Eof, 0, 0);
 }
 
 Token Lexer::lex_num_lit() {
@@ -251,33 +251,33 @@ Token Lexer::lex_ident() {
   }
 
   if (reserved_words_.contains(literal)) {
-    TknTy curr_type = reserved_words_[literal];
+    TokenKind curr_type = reserved_words_[literal];
     Token next = Token(curr_type, ident_start, ident_line);
     next.SetIdentLit(literal);
     return next;
   } else {
-    Token next = Token(TKN_IDENT, ident_start, ident_line);
+    Token next = Token(TokenKind::Identifier, ident_start, ident_line);
     next.SetIdentLit(literal);
     return next;
   }
 }
 
 Token Lexer::consume_str_lit(std::string str, int pos, int line) {
-  Token tkn = Token(TKN_STRLIT, pos, line);
+  Token tkn = Token(TokenKind::StringLiteral, pos, line);
   tkn.SetStrLit(str);
   advance();
   return tkn;
 }
 
 Token Lexer::consume_num_lit(std::string num, int pos, int line) {
-  Token tkn = Token(TKN_NUMLIT, pos, line);
+  Token tkn = Token(TokenKind::NumberLiteral, pos, line);
   tkn.SetNumLit(num);
   advance();
   return tkn;
 }
 
-Token Lexer::consume(TknTy ty) {
-  Token tkn = Token(ty, curr_pos_, curr_line_);
+Token Lexer::consume(TokenKind kind) {
+  Token tkn = Token(kind, curr_pos_, curr_line_);
   advance();
   return tkn;
 }
