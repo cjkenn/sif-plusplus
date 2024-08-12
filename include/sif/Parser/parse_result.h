@@ -15,7 +15,7 @@ public:
   };
   ~ParseResult(){};
 
-  std::optional<std::unique_ptr<AstNode>> ast;
+  std::optional<std::unique_ptr<ASTNode>> ast;
   bool contains_error;
   std::vector<ParseError> errors;
 

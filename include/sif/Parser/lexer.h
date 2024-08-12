@@ -10,7 +10,7 @@ namespace sif {
 class Lexer {
 public:
   Lexer(std::string filename);
-  ~Lexer(){};
+  ~Lexer() {}
 
   Token Lex();
 

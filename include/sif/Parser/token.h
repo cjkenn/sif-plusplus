@@ -65,7 +65,7 @@ public:
     line_ = line;
   }
 
-  ~Token(){};
+  ~Token() {}
 
   TknTy GetTy() const { return ty_; }
   int GetPos() const { return pos_; }
