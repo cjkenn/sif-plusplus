@@ -8,6 +8,9 @@
 #include <memory>
 
 namespace sif {
+typedef std::optional<std::vector<std::shared_ptr<ASTNode>>>
+    OptionalBlockBindings;
+
 class Parser {
 public:
   Parser(std::unique_ptr<Lexer> lexer, std::unique_ptr<SymbolTable> symtab)
@@ -21,14 +24,27 @@ public:
   ParseFullResult Parse();
 
 private:
-  ParseCallResult decl();
-
   const size_t FN_PARAM_MAX_LEN = 64;
+
+  ParseCallResult decl();
+  ParseCallResult stmt();
+  ParseCallResult var_decl();
+  ParseCallResult fn_decl();
+
+  ParseCallResult if_stmt();
+  ParseCallResult for_stmt();
+  ParseCallResult ret_stmt();
+  ParseCallResult expr_stmt();
+
+  ParseCallResult block(OptionalBlockBindings bindings);
+
+  std::optional<ParseError> expect(TokenKind kind);
+  void consume();
 
   std::unique_ptr<Lexer> lexer_;
   std::unique_ptr<SymbolTable> symtab_;
   Token curr_tkn_;
-  std::vector<ParseError> errors;
+  std::vector<ParseError> errors_;
   bool should_check_sym_tab_;
 };
 } // namespace sif

@@ -45,6 +45,7 @@ public:
   ParseError error() { return *err_; }
 
 private:
+  // TODO: why would these be pointers?
   std::unique_ptr<ASTNode> ast_;
   std::unique_ptr<ParseError> err_;
 };

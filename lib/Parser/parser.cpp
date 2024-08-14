@@ -24,4 +24,75 @@ ParseFullResult Parser::Parse() {
   return ParseFullResult(std::make_unique<ASTNode>(program), found_error);
 }
 
-ParseCallResult decl() {}
+ParseCallResult Parser::decl() {
+  switch (curr_tkn_.GetKind()) {
+  case TokenKind::Var:
+    return var_decl();
+  case TokenKind::Fn:
+    return fn_decl();
+  default:
+    return stmt();
+  }
+}
+
+ParseCallResult Parser::stmt() {
+  switch (curr_tkn_.GetKind()) {
+  case TokenKind::If:
+    return if_stmt();
+  case TokenKind::For:
+    return for_stmt();
+  case TokenKind::Ret:
+    return ret_stmt();
+  case TokenKind::LeftBrace:
+    return block(std::nullopt);
+  default:
+    return expr_stmt();
+  }
+}
+
+ParseCallResult Parser::block(OptionalBlockBindings bindings) {
+  auto lb = expect(TokenKind::LeftBrace);
+  if (lb.has_value()) {
+    return ParseCallResult(lb.value());
+  }
+
+  std::vector<std::unique_ptr<ASTNode>> decls;
+
+  // TODO: init symbol table scope
+
+  for (;;) {
+    if (curr_tkn_.GetKind() == TokenKind::RightBrace) {
+      break;
+    } else if (curr_tkn_.GetKind() == TokenKind::Eof) {
+      break;
+    } else {
+      auto result = decl();
+      if (result.has_value()) {
+        decls.push_back(std::make_unique<ASTNode>(result.value()));
+      } else {
+        errors_.push_back(result.error());
+      }
+    }
+  }
+
+  auto rb = expect(TokenKind::RightBrace);
+  if (rb.has_value()) {
+    return ParseCallResult(rb.value());
+  }
+
+  // TODO: scope
+  BlockAST block = BlockAST(std::move(decls), 0);
+  return ParseCallResult(std::make_unique<ASTNode>(block));
+}
+
+std::optional<ParseError> Parser::expect(TokenKind kind) {
+  if (curr_tkn_.GetKind() == kind) {
+    consume();
+    return std::nullopt;
+  }
+
+  // TODO: real errors
+  return std::make_optional<ParseError>();
+}
+
+void Parser::consume() { curr_tkn_ = lexer_->Lex(); }
