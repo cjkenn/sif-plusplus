@@ -182,4 +182,11 @@ class FnDeclAST : public ASTNode {
   size_t scope_;
 };
 
+class PrimaryExprAST : public ASTNode {
+public:
+  PrimaryExprAST(Token tkn) : token_(TokenKind::Eof, 0, 0) { token_ = tkn; }
+
+  Token token_;
+};
+
 } // namespace sif

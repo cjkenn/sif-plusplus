@@ -59,6 +59,15 @@ ParseCallResult Parser::block(OptionalBlockBindings bindings) {
   std::vector<std::unique_ptr<ASTNode>> decls;
 
   // TODO: init symbol table scope
+  symtab_->InitScope();
+  if (bindings.has_value()) {
+    for (auto node : bindings.value()) {
+      if (node->GetKind() == ASTKind::PrimaryExpr) {
+        auto pe = dynamic_cast<PrimaryExprAST *>(node.get());
+        symtab_->Store(pe->token_.GetName(), *node);
+      }
+    }
+  }
 
   for (;;) {
     if (curr_tkn_.GetKind() == TokenKind::RightBrace) {
@@ -81,7 +90,9 @@ ParseCallResult Parser::block(OptionalBlockBindings bindings) {
   }
 
   // TODO: scope
-  BlockAST block = BlockAST(std::move(decls), 0);
+  int lvl = symtab_->Level();
+  symtab_->CloseScope();
+  BlockAST block = BlockAST(std::move(decls), lvl);
   return ParseCallResult(std::make_unique<ASTNode>(block));
 }
 

@@ -78,6 +78,8 @@ public:
   void SetStrLit(std::string lit) { str_lit_ = lit; }
   void SetIdentLit(std::string lit) { ident_lit_ = lit; }
   void SetNumLit(std::string lit) { num_lit_ = lit; }
+  std::string GetName();
+  float GetNumber();
 
 private:
   TokenKind kind_;

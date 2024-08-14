@@ -4,4 +4,6 @@ add_library(Parser
   parse_result.cpp
   ast.cpp
   parse_error.cpp
+  symbol_table.cpp
+  token.cpp
 )
