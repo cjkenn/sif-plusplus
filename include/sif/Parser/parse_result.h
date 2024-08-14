@@ -7,25 +7,45 @@
 #include <vector>
 
 namespace sif {
-class ParseResult {
+class ParseFullResult {
 public:
-  ParseResult() {
-    ast_ = std::nullopt;
+  ParseFullResult() {
+    ast_ = nullptr;
     contains_error_ = false;
   };
 
-  ParseResult(std::optional<std::unique_ptr<ASTNode>> ast,
-              bool contains_error) {
+  ParseFullResult(std::unique_ptr<ASTNode> ast, bool contains_error) {
     ast_ = std::move(ast);
     contains_error_ = contains_error;
   }
 
-  ~ParseResult() {}
+  ~ParseFullResult() {}
 
-  std::optional<std::unique_ptr<ASTNode>> ast_;
+  std::unique_ptr<ASTNode> ast_;
   bool contains_error_;
   std::vector<ParseError> errors_;
+};
+
+class ParseCallResult {
+public:
+  ParseCallResult(std::unique_ptr<ASTNode> ast) {
+    ast_ = std::move(ast);
+    err_ = nullptr;
+  }
+
+  ParseCallResult(ParseError err) {
+    err_ = std::make_unique<ParseError>(err);
+    ast_ = nullptr;
+  }
+
+  ~ParseCallResult() {}
+
+  bool has_value() { return ast_ != nullptr; }
+  ASTNode value() { return *ast_; }
+  ParseError error() { return *err_; }
 
 private:
+  std::unique_ptr<ASTNode> ast_;
+  std::unique_ptr<ParseError> err_;
 };
 } // namespace sif

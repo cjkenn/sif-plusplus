@@ -4,22 +4,24 @@
 
 using namespace sif;
 
-std::unique_ptr<ParseResult> Parser::Parse() {
-  std::vector<ASTNode> blocks;
+ParseFullResult Parser::Parse() {
+  std::vector<std::unique_ptr<ASTNode>> blocks;
   bool found_error = false;
 
-  while (curr_token_.GetKind() != TokenKind::Eof) {
-    auto result = decl();
-    if (decl.has_value()) {
-      blocks.push(decl.value());
+  while (curr_tkn_.GetKind() != TokenKind::Eof) {
+    ParseCallResult result = decl();
+    if (result.has_value()) {
+      blocks.push_back(std::make_unique<ASTNode>(result.value()));
     } else {
       found_error = true;
-      auto error = decl.error();
-      error.emit();
+      auto error = result.error();
+      // TODO: emit errors
+      // error.emit();
     }
   }
 
-  auto head = std::make_unique<ProgramAST>(blocks);
-  return std::make_unique<ParseResult>(std::optional<ASTNode>(head),
-                                       found_error);
+  ProgramAST program = ProgramAST(std::move(blocks));
+  return ParseFullResult(std::make_unique<ASTNode>(program), found_error);
 }
+
+ParseCallResult decl() {}

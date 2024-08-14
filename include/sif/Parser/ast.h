@@ -36,7 +36,7 @@ enum class ASTKind {
 
 class ASTNode {
 public:
-  virtual ~ASTNode() {}
+  virtual ~ASTNode() = default;
 
   ASTKind GetKind() const { return kind_; }
 
