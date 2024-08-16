@@ -28,8 +28,11 @@ private:
 
   ParseCallResult decl();
   ParseCallResult stmt();
+  ParseCallResult expr();
   ParseCallResult var_decl();
   ParseCallResult fn_decl();
+  ParseCallResult table_decl(Token ident_tkn);
+  ParseCallResult array_decl(Token ident_tkn);
 
   ParseCallResult if_stmt();
   ParseCallResult for_stmt();
@@ -38,8 +41,10 @@ private:
 
   ParseCallResult block(OptionalBlockBindings bindings);
 
+  std::optional<Token> match_ident();
   std::optional<ParseError> expect(TokenKind kind);
   void consume();
+  ParseError add_error(ParseErrorKind kind);
 
   std::unique_ptr<Lexer> lexer_;
   std::unique_ptr<SymbolTable> symtab_;

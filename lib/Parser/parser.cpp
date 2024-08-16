@@ -89,11 +89,65 @@ ParseCallResult Parser::block(OptionalBlockBindings bindings) {
     return ParseCallResult(rb.value());
   }
 
-  // TODO: scope
   int lvl = symtab_->Level();
   symtab_->CloseScope();
   BlockAST block = BlockAST(std::move(decls), lvl);
   return ParseCallResult(std::make_unique<ASTNode>(block));
+}
+
+ParseCallResult Parser::var_decl() {
+  auto expected = expect(TokenKind::Var);
+  if (expected.has_value()) {
+    return ParseCallResult(expected.value());
+  }
+
+  auto maybe_ident_tkn = match_ident();
+  if (!maybe_ident_tkn.has_value()) {
+    auto ident_err = add_error(ParseErrorKind::ExpectedIdent);
+    return ParseCallResult(ident_err);
+  }
+
+  auto ident_tkn = maybe_ident_tkn.value();
+
+  switch (curr_tkn_.GetKind()) {
+  case TokenKind::Equal: {
+    auto eq = expect(TokenKind::Equal);
+    if (eq.has_value()) {
+      return ParseCallResult(eq.value());
+    }
+
+    ParseCallResult rhs = ParseCallResult();
+    if (curr_tkn_.GetKind() == TokenKind::LeftBracket) {
+      rhs = array_decl(ident_tkn);
+    } else if (curr_tkn_.GetKind() == TokenKind::DoubleLeftBracket) {
+      rhs = table_decl(ident_tkn);
+    } else {
+      auto assign_result = expr();
+      auto sc = expect(TokenKind::Semicolon);
+      if (sc.has_value()) {
+        rhs = ParseCallResult(sc.value());
+      } else {
+        rhs = assign_result;
+      }
+    }
+
+    // TODO: continue with rhs and returning a var_decl here
+  }
+  }
+}
+
+std::optional<Token> Parser::match_ident() {
+  switch (curr_tkn_.GetKind()) {
+  case TokenKind::Identifier: {
+    auto tkn =
+        Token(curr_tkn_.GetKind(), curr_tkn_.GetPos(), curr_tkn_.GetLine());
+    consume();
+    return std::make_optional<Token>(tkn);
+  }
+  default:
+    add_error(ParseErrorKind::InvalidIdent);
+    return std::nullopt;
+  }
 }
 
 std::optional<ParseError> Parser::expect(TokenKind kind) {
@@ -103,7 +157,14 @@ std::optional<ParseError> Parser::expect(TokenKind kind) {
   }
 
   // TODO: real errors
-  return std::make_optional<ParseError>();
+  return std::make_optional<ParseError>(
+      ParseErrorKind::TokenMismatch, curr_tkn_.GetLine(), curr_tkn_.GetPos());
+}
+
+ParseError Parser::add_error(ParseErrorKind kind) {
+  auto err = ParseError(kind, curr_tkn_.GetLine(), curr_tkn_.GetPos());
+  errors_.push_back(err);
+  return err;
 }
 
 void Parser::consume() { curr_tkn_ = lexer_->Lex(); }

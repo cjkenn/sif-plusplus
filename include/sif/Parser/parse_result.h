@@ -38,6 +38,8 @@ public:
     ast_ = nullptr;
   }
 
+  ParseCallResult() {}
+
   ~ParseCallResult() {}
 
   bool has_value() { return ast_ != nullptr; }
