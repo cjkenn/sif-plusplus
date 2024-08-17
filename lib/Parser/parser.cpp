@@ -136,9 +136,22 @@ ParseCallResultPtr Parser::var_decl() {
         std::make_unique<Token>(ident_tkn), symtab_->IsGlobal(),
         std::make_optional(std::move(rhs)));
 
-    // symtab_->Store(ident_tkn.GetName(), std::copy(node));
-    // return std::make_unique<ParseCallResult>(node);
+    symtab_->Store(ident_tkn.GetName(), *node.get());
+    return std::make_unique<ParseCallResult>(std::move(node));
   }
+  case TokenKind::Semicolon: {
+    auto sc = expect(TokenKind::Semicolon);
+    if (sc.has_value()) {
+      return std::make_unique<ParseCallResult>(sc.value());
+    }
+    ASTPtr node = std::make_unique<VarDeclAST>(
+        std::make_unique<Token>(ident_tkn), symtab_->IsGlobal(), std::nullopt);
+    symtab_->Store(ident_tkn.GetName(), *node.get());
+    return std::make_unique<ParseCallResult>(std::move(node));
+  }
+  default:
+    auto err = add_error(ParseErrorKind::InvalidToken);
+    return std::make_unique<ParseCallResult>(err);
   }
 }
 
