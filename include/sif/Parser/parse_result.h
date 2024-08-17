@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ast.h"
 #include "sif/Parser/ast.h"
 #include "sif/Parser/parse_error.h"
 #include <memory>
@@ -7,6 +8,9 @@
 #include <vector>
 
 namespace sif {
+class ParseCallResult;
+typedef std::unique_ptr<ParseCallResult> ParseCallResultPtr;
+
 class ParseFullResult {
 public:
   ParseFullResult() {
@@ -14,21 +18,23 @@ public:
     contains_error_ = false;
   };
 
-  ParseFullResult(std::unique_ptr<ASTNode> ast, bool contains_error) {
+  ParseFullResult(ASTPtr ast, bool contains_error) {
     ast_ = std::move(ast);
     contains_error_ = contains_error;
   }
 
   ~ParseFullResult() {}
 
-  std::unique_ptr<ASTNode> ast_;
+  ASTPtr ast_;
   bool contains_error_;
   std::vector<ParseError> errors_;
 };
 
 class ParseCallResult {
 public:
-  ParseCallResult(std::unique_ptr<ASTNode> ast) {
+  // it would be better to use a builder pattern here
+  // instead of multiple constructors probably
+  ParseCallResult(ASTPtr ast) {
     ast_ = std::move(ast);
     err_ = nullptr;
   }
@@ -42,13 +48,16 @@ public:
 
   ~ParseCallResult() {}
 
-  bool has_value() { return ast_ != nullptr; }
-  ASTNode value() { return *ast_; }
+  bool has_ast() { return ast_ != nullptr; }
+  bool has_error() { return err_ != nullptr; }
+  // TODO: too much moving here? would prefer this to be a pointer
+  // instead of a move
+  ASTPtr ast() { return std::move(ast_); }
   ParseError error() { return *err_; }
 
 private:
   // TODO: why would these be pointers?
-  std::unique_ptr<ASTNode> ast_;
+  ASTPtr ast_;
   std::unique_ptr<ParseError> err_;
 };
 } // namespace sif

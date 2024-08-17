@@ -26,20 +26,20 @@ public:
 private:
   const size_t FN_PARAM_MAX_LEN = 64;
 
-  ParseCallResult decl();
-  ParseCallResult stmt();
-  ParseCallResult expr();
-  ParseCallResult var_decl();
-  ParseCallResult fn_decl();
-  ParseCallResult table_decl(Token ident_tkn);
-  ParseCallResult array_decl(Token ident_tkn);
+  ParseCallResultPtr decl();
+  ParseCallResultPtr stmt();
+  ParseCallResultPtr expr();
+  ParseCallResultPtr var_decl();
+  ParseCallResultPtr fn_decl();
+  ParseCallResultPtr table_decl(Token ident_tkn);
+  ParseCallResultPtr array_decl(Token ident_tkn);
 
-  ParseCallResult if_stmt();
-  ParseCallResult for_stmt();
-  ParseCallResult ret_stmt();
-  ParseCallResult expr_stmt();
+  ParseCallResultPtr if_stmt();
+  ParseCallResultPtr for_stmt();
+  ParseCallResultPtr ret_stmt();
+  ParseCallResultPtr expr_stmt();
 
-  ParseCallResult block(OptionalBlockBindings bindings);
+  ParseCallResultPtr block(OptionalBlockBindings bindings);
 
   std::optional<Token> match_ident();
   std::optional<ParseError> expect(TokenKind kind);

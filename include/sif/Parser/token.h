@@ -1,8 +1,12 @@
 #pragma once
 
+#include <memory>
 #include <optional>
 
 namespace sif {
+class Token;
+typedef std::unique_ptr<Token> TokenPtr;
+
 enum class TokenKind {
   // Single character tokens
   LeftParen,

@@ -6,6 +6,9 @@
 #include <vector>
 
 namespace sif {
+class ASTNode;
+typedef std::unique_ptr<ASTNode> ASTPtr;
+
 enum class ASTKind {
   Program,
   Block,
@@ -46,7 +49,7 @@ protected:
 
 class ProgramAST : public ASTNode {
 public:
-  ProgramAST(std::vector<std::unique_ptr<ASTNode>> blocks) {
+  ProgramAST(std::vector<ASTPtr> blocks) {
     kind_ = ASTKind::Program;
     blocks_ = std::move(blocks);
   }
@@ -54,12 +57,12 @@ public:
   ~ProgramAST() {}
 
 private:
-  std::vector<std::unique_ptr<ASTNode>> blocks_;
+  std::vector<ASTPtr> blocks_;
 };
 
 class BlockAST : public ASTNode {
 public:
-  BlockAST(std::vector<std::unique_ptr<ASTNode>> decls, size_t scope) {
+  BlockAST(std::vector<ASTPtr> decls, size_t scope) {
     kind_ = ASTKind::Block;
     decls_ = std::move(decls);
     scope_ = scope;
@@ -68,15 +71,14 @@ public:
   ~BlockAST() {}
 
 private:
-  std::vector<std::unique_ptr<ASTNode>> decls_;
+  std::vector<ASTPtr> decls_;
   size_t scope_;
 };
 
 class IfStmtAST : public ASTNode {
 public:
-  IfStmtAST(std::unique_ptr<ASTNode> cond, std::unique_ptr<ASTNode> ifs,
-            std::vector<std::shared_ptr<ASTNode>> elifs,
-            std::vector<std::shared_ptr<ASTNode>> elses) {
+  IfStmtAST(ASTPtr cond, ASTPtr ifs, std::vector<ASTPtr> elifs,
+            std::vector<ASTPtr> elses) {
     kind_ = ASTKind::IfStmt;
     cond_expr = std::move(cond);
     if_stmts = std::move(ifs);
@@ -86,16 +88,15 @@ public:
 
   ~IfStmtAST() {}
 
-  std::shared_ptr<ASTNode> cond_expr;
-  std::shared_ptr<ASTNode> if_stmts;
-  std::vector<std::shared_ptr<ASTNode>> elif_exprs;
-  std::vector<std::shared_ptr<ASTNode>> else_stmts;
+  ASTPtr cond_expr;
+  ASTPtr if_stmts;
+  std::vector<ASTPtr> elif_exprs;
+  std::vector<ASTPtr> else_stmts;
 };
 
 class ElifStmtAST : public ASTNode {
 public:
-  ElifStmtAST(std::unique_ptr<ASTNode> cond_expr,
-              std::unique_ptr<ASTNode> stmts) {
+  ElifStmtAST(ASTPtr cond_expr, ASTPtr stmts) {
     kind_ = ASTKind::ElifStmt;
     cond_expr_ = std::move(cond_expr);
     stmts_ = std::move(stmts);
@@ -103,15 +104,13 @@ public:
 
   ~ElifStmtAST() {}
 
-  std::unique_ptr<ASTNode> cond_expr_;
-  std::unique_ptr<ASTNode> stmts_;
+  ASTPtr cond_expr_;
+  ASTPtr stmts_;
 };
 
 class ForStmtAST : public ASTNode {
 public:
-  ForStmtAST(std::unique_ptr<ASTNode> var_list,
-             std::unique_ptr<ASTNode> in_expr_list,
-             std::unique_ptr<ASTNode> stmts) {
+  ForStmtAST(ASTPtr var_list, ASTPtr in_expr_list, ASTPtr stmts) {
     kind_ = ASTKind::ForStmt;
     var_list_ = std::move(var_list);
     in_expr_list_ = std::move(in_expr_list);
@@ -120,39 +119,39 @@ public:
 
   ~ForStmtAST() {}
 
-  std::unique_ptr<ASTNode> var_list_;
-  std::unique_ptr<ASTNode> in_expr_list_;
-  std::unique_ptr<ASTNode> stmts_;
+  ASTPtr var_list_;
+  ASTPtr in_expr_list_;
+  ASTPtr stmts_;
 };
 
 class ReturnStmtAST : public ASTNode {
 public:
-  ReturnStmtAST(std::optional<std::unique_ptr<ASTNode>> ret_expr) {
+  ReturnStmtAST(std::optional<ASTPtr> ret_expr) {
     kind_ = ASTKind::ReturnStmt;
     ret_expr_ = std::move(ret_expr);
   }
 
   ~ReturnStmtAST() {}
 
-  std::optional<std::unique_ptr<ASTNode>> ret_expr_;
+  std::optional<ASTPtr> ret_expr_;
 };
 
 class ExprStmtAST : public ASTNode {
 public:
-  ExprStmtAST(std::unique_ptr<ASTNode> expr) {
+  ExprStmtAST(ASTPtr expr) {
     kind_ = ASTKind::ExprStmt;
     expr_ = std::move(expr);
   }
 
   ~ExprStmtAST() {}
 
-  std::unique_ptr<ASTNode> expr_;
+  ASTPtr expr_;
 };
 
 class VarDeclAST : public ASTNode {
 public:
   VarDeclAST(std::unique_ptr<Token> ident_token, bool is_global,
-             std::optional<std::unique_ptr<ASTNode>> rhs) {
+             std::optional<ASTPtr> rhs) {
     ident_token_ = std::move(ident_token);
     is_global_ = is_global;
     rhs_ = std::move(rhs);
@@ -162,12 +161,12 @@ public:
 
   std::unique_ptr<Token> ident_token_;
   bool is_global_;
-  std::optional<std::unique_ptr<ASTNode>> rhs_;
+  std::optional<ASTPtr> rhs_;
 };
 
 class FnDeclAST : public ASTNode {
-  FnDeclAST(std::unique_ptr<Token> ident_token, std::unique_ptr<ASTNode> params,
-            std::unique_ptr<ASTNode> body, size_t scope) {
+  FnDeclAST(std::unique_ptr<Token> ident_token, ASTPtr params, ASTPtr body,
+            size_t scope) {
     ident_token_ = std::move(ident_token);
     params_ = std::move(params);
     body_ = std::move(body);
@@ -177,8 +176,8 @@ class FnDeclAST : public ASTNode {
   ~FnDeclAST() {}
 
   std::unique_ptr<Token> ident_token_;
-  std::unique_ptr<ASTNode> params_;
-  std::unique_ptr<ASTNode> body_;
+  ASTPtr params_;
+  ASTPtr body_;
   size_t scope_;
 };
 
