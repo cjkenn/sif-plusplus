@@ -131,7 +131,6 @@ ParseCallResultPtr Parser::var_decl() {
       }
     }
 
-    // TODO: continue with rhs and returning a var_decl here
     ASTPtr node = std::make_unique<VarDeclAST>(
         std::make_unique<Token>(ident_tkn), symtab_->IsGlobal(),
         std::make_optional(std::move(rhs)));
@@ -144,6 +143,7 @@ ParseCallResultPtr Parser::var_decl() {
     if (sc.has_value()) {
       return std::make_unique<ParseCallResult>(sc.value());
     }
+
     ASTPtr node = std::make_unique<VarDeclAST>(
         std::make_unique<Token>(ident_tkn), symtab_->IsGlobal(), std::nullopt);
     symtab_->Store(ident_tkn.GetName(), *node.get());
@@ -154,6 +154,15 @@ ParseCallResultPtr Parser::var_decl() {
     return std::make_unique<ParseCallResult>(err);
   }
 }
+
+ParseCallResultPtr Parser::fn_decl() {}
+ParseCallResultPtr Parser::table_decl(Token ident_tkn) {}
+ParseCallResultPtr Parser::array_decl(Token ident_tkn) {}
+ParseCallResultPtr Parser::expr() {}
+ParseCallResultPtr Parser::if_stmt() {}
+ParseCallResultPtr Parser::for_stmt() {}
+ParseCallResultPtr Parser::ret_stmt() {}
+ParseCallResultPtr Parser::expr_stmt() {}
 
 std::optional<Token> Parser::match_ident() {
   switch (curr_tkn_.GetKind()) {
