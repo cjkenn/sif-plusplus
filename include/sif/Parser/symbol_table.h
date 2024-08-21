@@ -6,12 +6,16 @@
 #include <unordered_map>
 
 namespace sif {
-enum class SymbolKind { Fn, Var };
 typedef std::unordered_map<std::string, ASTNode> Scope;
+enum class SymbolKind { Fn, Var };
 
 class SymbolTable {
 public:
-  SymbolTable() { curr_level_ = 0; }
+  SymbolTable() {
+    curr_level_ = 0;
+    Scope first;
+    table_.push_back(first);
+  }
 
   ~SymbolTable() {}
 

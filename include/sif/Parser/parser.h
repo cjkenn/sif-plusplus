@@ -6,6 +6,7 @@
 #include "sif/Parser/symbol_table.h"
 #include "sif/Parser/token.h"
 #include <memory>
+#include <optional>
 
 namespace sif {
 typedef std::optional<std::vector<std::shared_ptr<ASTNode>>>
@@ -42,7 +43,7 @@ private:
   ParseCallResultPtr block(OptionalBlockBindings bindings);
 
   std::optional<Token> match_ident();
-  std::optional<ParseError> expect(TokenKind kind);
+  std::optional<ParseError> match(TokenKind kind);
   void consume();
   ParseError add_error(ParseErrorKind kind);
 

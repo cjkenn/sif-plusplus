@@ -311,7 +311,7 @@ void Lexer::next_line() {
 }
 
 void Lexer::skip_whitespace() {
-  while (std::isspace(curr_char_.value())) {
+  while (curr_char_.has_value() && std::isspace(curr_char_.value())) {
     advance();
   }
 }

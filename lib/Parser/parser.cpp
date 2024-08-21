@@ -1,7 +1,9 @@
 #include "sif/Parser/parser.h"
 #include "sif/Parser/parse_result.h"
 #include "sif/Parser/token.h"
+#include <cassert>
 #include <memory>
+#include <optional>
 
 using namespace sif;
 
@@ -52,7 +54,7 @@ ParseCallResultPtr Parser::stmt() {
 }
 
 ParseCallResultPtr Parser::block(OptionalBlockBindings bindings) {
-  auto lb = expect(TokenKind::LeftBrace);
+  auto lb = match(TokenKind::LeftBrace);
   if (lb.has_value()) {
     return std::make_unique<ParseCallResult>(lb.value());
   }
@@ -84,7 +86,7 @@ ParseCallResultPtr Parser::block(OptionalBlockBindings bindings) {
     }
   }
 
-  auto rb = expect(TokenKind::RightBrace);
+  auto rb = match(TokenKind::RightBrace);
   if (rb.has_value()) {
     return std::make_unique<ParseCallResult>(rb.value());
   }
@@ -96,9 +98,9 @@ ParseCallResultPtr Parser::block(OptionalBlockBindings bindings) {
 }
 
 ParseCallResultPtr Parser::var_decl() {
-  auto expected = expect(TokenKind::Var);
-  if (expected.has_value()) {
-    return std::make_unique<ParseCallResult>(expected.value());
+  std::optional<ParseError> next_var = Parser::match(TokenKind::Var);
+  if (next_var.has_value()) {
+    return std::make_unique<ParseCallResult>(next_var.value());
   }
 
   std::optional<Token> maybe_ident_tkn = match_ident();
@@ -111,7 +113,7 @@ ParseCallResultPtr Parser::var_decl() {
 
   switch (curr_tkn_.GetKind()) {
   case TokenKind::Equal: {
-    auto eq = expect(TokenKind::Equal);
+    auto eq = match(TokenKind::Equal);
     if (eq.has_value()) {
       return std::make_unique<ParseCallResult>(eq.value());
     }
@@ -123,7 +125,7 @@ ParseCallResultPtr Parser::var_decl() {
       rhs = std::move(table_decl(ident_tkn)->ast());
     } else {
       auto assign_result = expr();
-      auto sc = expect(TokenKind::Semicolon);
+      auto sc = match(TokenKind::Semicolon);
       if (sc.has_value()) {
         return std::make_unique<ParseCallResult>(sc.value());
       } else {
@@ -139,7 +141,7 @@ ParseCallResultPtr Parser::var_decl() {
     return std::make_unique<ParseCallResult>(std::move(node));
   }
   case TokenKind::Semicolon: {
-    auto sc = expect(TokenKind::Semicolon);
+    std::optional<ParseError> sc = match(TokenKind::Semicolon);
     if (sc.has_value()) {
       return std::make_unique<ParseCallResult>(sc.value());
     }
@@ -147,6 +149,7 @@ ParseCallResultPtr Parser::var_decl() {
     ASTPtr node = std::make_unique<VarDeclAST>(
         std::make_unique<Token>(ident_tkn), symtab_->IsGlobal(), std::nullopt);
     symtab_->Store(ident_tkn.GetName(), *node.get());
+
     return std::make_unique<ParseCallResult>(std::move(node));
   }
   default:
@@ -169,6 +172,11 @@ std::optional<Token> Parser::match_ident() {
   case TokenKind::Identifier: {
     auto tkn =
         Token(curr_tkn_.GetKind(), curr_tkn_.GetPos(), curr_tkn_.GetLine());
+
+    assert(curr_tkn_.GetIdentLit().has_value() &&
+           "current identifier token should contain an identifier name!");
+
+    tkn.SetIdentLit(curr_tkn_.GetIdentLit().value());
     consume();
     return std::make_optional<Token>(tkn);
   }
@@ -178,15 +186,16 @@ std::optional<Token> Parser::match_ident() {
   }
 }
 
-std::optional<ParseError> Parser::expect(TokenKind kind) {
+std::optional<ParseError> Parser::match(TokenKind kind) {
   if (curr_tkn_.GetKind() == kind) {
     consume();
     return std::nullopt;
   }
 
   // TODO: real errors
-  return std::make_optional<ParseError>(
-      ParseErrorKind::TokenMismatch, curr_tkn_.GetLine(), curr_tkn_.GetPos());
+  auto err = ParseError(ParseErrorKind::TokenMismatch, curr_tkn_.GetLine(),
+                        curr_tkn_.GetPos());
+  return std::make_optional<ParseError>(err);
 }
 
 ParseError Parser::add_error(ParseErrorKind kind) {

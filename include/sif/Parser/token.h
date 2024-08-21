@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <optional>
+#include <type_traits>
 
 namespace sif {
 class Token;
@@ -61,6 +62,13 @@ enum class TokenKind {
   False
 };
 
+template <typename T>
+std::ostream &operator<<(
+    typename std::enable_if<std::is_enum<T>::value, std::ostream>::type &stream,
+    const T &e) {
+  return stream << static_cast<typename std::underlying_type<T>::type>(e);
+}
+
 class Token {
 public:
   Token(TokenKind kind, int pos, int line) {
@@ -79,9 +87,15 @@ public:
   std::optional<std::string> GetNumLit() const { return num_lit_; }
   void SetPos(int pos) { pos_ = pos; }
   void SetLine(int line) { line_ = line; }
-  void SetStrLit(std::string lit) { str_lit_ = lit; }
-  void SetIdentLit(std::string lit) { ident_lit_ = lit; }
-  void SetNumLit(std::string lit) { num_lit_ = lit; }
+  void SetStrLit(std::string lit) {
+    str_lit_ = std::make_optional<std::string>(lit);
+  }
+  void SetIdentLit(std::string lit) {
+    ident_lit_ = std::make_optional<std::string>(lit);
+  }
+  void SetNumLit(std::string lit) {
+    num_lit_ = std::make_optional<std::string>(lit);
+  }
   std::string GetName();
   float GetNumber();
 
