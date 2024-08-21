@@ -202,17 +202,52 @@ ParseCallResultPtr Parser::assign_expr() {
       return std::make_unique<ParseCallResult>(eq_match.value());
     }
 
-    auto rhs = assign_expr();
-    if (rhs->has_error()) {
-      return rhs;
+    auto rhs_result = assign_expr();
+    if (rhs_result->has_error()) {
+      return rhs_result;
     }
 
-    // Check the lhs of the expression. If it's an ident, we have a variable
-    // assignment.
-    // We check the symbol table for that variable, and error if we can't find
-    // it. If the lhs is an array access, we're mutating an array value. If it's
-    // neither of those, we have an invalid assignment.
+    auto rhs = rhs_result->ast();
+    switch (rhs->GetKind()) {
+    case ASTKind::PrimaryExpr: {
+      auto primary_expr_ast = dynamic_cast<PrimaryExprAST *>(rhs.get());
+      Token tkn = primary_expr_ast->token_;
+
+      switch (tkn.GetKind()) {
+      case TokenKind::Identifier: {
+        auto maybe_sym = symtab_->Retrieve(tkn.GetName());
+        if (!maybe_sym.has_value()) {
+          return std::make_unique<ParseCallResult>(
+              add_error(ParseErrorKind::UndeclaredSymbol));
+        }
+        auto variable = maybe_sym.value();
+        ASTPtr node = std::make_unique<VarAssignAST>(tkn, symtab_->IsGlobal(),
+                                                     std::move(rhs));
+        return std::make_unique<ParseCallResult>(std::move(node));
+      }
+
+      default:
+        return std::make_unique<ParseCallResult>(
+            add_error(ParseErrorKind::InvalidAssign));
+      }
+
+    case ASTKind::ArrayAccess: {
+      auto array_access_ast = dynamic_cast<ArrayAccessAST *>(rhs.get());
+      ASTPtr node = std::make_unique<ArrayMutExpr>(
+          tkn, std::move(array_access_ast->index_), std::move(rhs));
+      return std::make_unique<ParseCallResult>(std::move(node));
+    }
+
+    default:
+      return std::make_unique<ParseCallResult>(
+          add_error(ParseErrorKind::InvalidAssign));
+    }
+    }
   }
+
+  default:
+    return std::make_unique<ParseCallResult>(
+        add_error(ParseErrorKind::InvalidAssign));
   }
 }
 

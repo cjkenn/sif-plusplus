@@ -183,9 +183,52 @@ class FnDeclAST : public ASTNode {
 
 class PrimaryExprAST : public ASTNode {
 public:
-  PrimaryExprAST(Token tkn) : token_(TokenKind::Eof, 0, 0) { token_ = tkn; }
+  PrimaryExprAST(Token tkn) : token_(TokenKind::Eof, 0, 0) {
+    token_ = tkn;
+    kind_ = ASTKind::PrimaryExpr;
+  }
 
   Token token_;
+};
+
+class VarAssignAST : public ASTNode {
+public:
+  VarAssignAST(Token ident_tkn, bool is_global, ASTPtr rhs)
+      : ident_tkn_(TokenKind::Eof, 0, 0) {
+    ident_tkn_ = ident_tkn;
+    is_global_ = is_global;
+    rhs_ = std::move(rhs);
+  }
+
+  Token ident_tkn_;
+  bool is_global_;
+  ASTPtr rhs_;
+};
+
+class ArrayAccessAST : public ASTNode {
+public:
+  ArrayAccessAST(Token array_tkn, ASTPtr index)
+      : array_tkn_(TokenKind::Eof, 0, 0) {
+    array_tkn_ = array_tkn;
+    index_ = std::move(index);
+  }
+
+  Token array_tkn_;
+  ASTPtr index_;
+};
+
+class ArrayMutExpr : public ASTNode {
+public:
+  ArrayMutExpr(Token array_tkn, ASTPtr index, ASTPtr rhs)
+      : array_tkn_(TokenKind::Eof, 0, 0) {
+    array_tkn_ = array_tkn;
+    index_ = std::move(index);
+    rhs_ = std::move(rhs);
+  }
+
+  Token array_tkn_;
+  ASTPtr index_;
+  ASTPtr rhs_;
 };
 
 } // namespace sif
