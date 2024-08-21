@@ -27,20 +27,33 @@ public:
 private:
   const size_t FN_PARAM_MAX_LEN = 64;
 
+  ParseCallResultPtr block(OptionalBlockBindings bindings);
+
   ParseCallResultPtr decl();
-  ParseCallResultPtr stmt();
-  ParseCallResultPtr expr();
   ParseCallResultPtr var_decl();
   ParseCallResultPtr fn_decl();
   ParseCallResultPtr table_decl(Token ident_tkn);
   ParseCallResultPtr array_decl(Token ident_tkn);
 
+  ParseCallResultPtr stmt();
   ParseCallResultPtr if_stmt();
   ParseCallResultPtr for_stmt();
   ParseCallResultPtr ret_stmt();
   ParseCallResultPtr expr_stmt();
 
-  ParseCallResultPtr block(OptionalBlockBindings bindings);
+  ParseCallResultPtr expr();
+  ParseCallResultPtr assign_expr();
+  ParseCallResultPtr or_expr();
+  ParseCallResultPtr and_expr();
+  ParseCallResultPtr equality_expr();
+  ParseCallResultPtr compare_expr();
+  ParseCallResultPtr add_or_sub_expr();
+  ParseCallResultPtr mul_or_div_expr();
+  ParseCallResultPtr modulo_expr();
+  ParseCallResultPtr unary_expr();
+  ParseCallResultPtr fn_call_expr();
+  ParseCallResultPtr group_expr();
+  ParseCallResultPtr literal_expr();
 
   std::optional<Token> match_ident();
   std::optional<ParseError> match(TokenKind kind);

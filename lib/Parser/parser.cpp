@@ -161,7 +161,73 @@ ParseCallResultPtr Parser::var_decl() {
 ParseCallResultPtr Parser::fn_decl() {}
 ParseCallResultPtr Parser::table_decl(Token ident_tkn) {}
 ParseCallResultPtr Parser::array_decl(Token ident_tkn) {}
-ParseCallResultPtr Parser::expr() {}
+
+/**
+   Parses an expression. Because the grammar encodes precedence, we must call
+   each expression parsing method in the order starting from most general
+   (lowest precedence) to most specific (highest precedence). Note that we
+   recurse to higher precedence expressions first in each expression parse
+   method, which is why we start with the lowest precedence instead of the
+   highest.
+
+     Precedence roughly follows this table:
+     | = Assignment       | <- Lowest precedence
+     | ||                 |
+     | &&                 |
+     | ==, !=             |
+     | >, <, >=, <=       |
+     | +, -               |
+     | *, /               |
+     | %                  |
+     | -, ! Unary         |
+     | Literals           | <- Highest precedence
+
+     expr ::= assignexpr ;
+ */
+ParseCallResultPtr Parser::expr() { return assign_expr(); }
+
+ParseCallResultPtr Parser::assign_expr() {
+  auto ast = or_expr();
+  if (ast->has_error()) {
+    return ast;
+  }
+
+  switch (curr_tkn_.GetKind()) {
+  case TokenKind::Equal: {
+    auto tkn =
+        Token(curr_tkn_.GetKind(), curr_tkn_.GetPos(), curr_tkn_.GetLine());
+
+    auto eq_match = match(TokenKind::Equal);
+    if (eq_match.has_value()) {
+      return std::make_unique<ParseCallResult>(eq_match.value());
+    }
+
+    auto rhs = assign_expr();
+    if (rhs->has_error()) {
+      return rhs;
+    }
+
+    // Check the lhs of the expression. If it's an ident, we have a variable
+    // assignment.
+    // We check the symbol table for that variable, and error if we can't find
+    // it. If the lhs is an array access, we're mutating an array value. If it's
+    // neither of those, we have an invalid assignment.
+  }
+  }
+}
+
+ParseCallResultPtr Parser::or_expr() {}
+ParseCallResultPtr Parser::and_expr() {}
+ParseCallResultPtr Parser::equality_expr() {}
+ParseCallResultPtr Parser::compare_expr() {}
+ParseCallResultPtr Parser::add_or_sub_expr() {}
+ParseCallResultPtr Parser::mul_or_div_expr() {}
+ParseCallResultPtr Parser::modulo_expr() {}
+ParseCallResultPtr Parser::unary_expr() {}
+ParseCallResultPtr Parser::fn_call_expr() {}
+ParseCallResultPtr Parser::group_expr() {}
+ParseCallResultPtr Parser::literal_expr() {}
+
 ParseCallResultPtr Parser::if_stmt() {}
 ParseCallResultPtr Parser::for_stmt() {}
 ParseCallResultPtr Parser::ret_stmt() {}
