@@ -187,13 +187,13 @@ ParseCallResultPtr Parser::array_decl(Token ident_tkn) {}
 ParseCallResultPtr Parser::expr() { return assign_expr(); }
 
 ParseCallResultPtr Parser::assign_expr() {
-  auto ast = or_expr();
-  if (ast->has_error()) {
-    return ast;
-  }
+  // auto ast = or_expr();
+  // if (ast->has_error()) {
+  //   return ast;
+  // }
 
-  switch (curr_tkn_.GetKind()) {
-  case TokenKind::Equal: {
+  std::cout << curr_tkn_.GetKind();
+  if (curr_tkn_.GetKind() == TokenKind::Equal) {
     auto tkn =
         Token(curr_tkn_.GetKind(), curr_tkn_.GetPos(), curr_tkn_.GetLine());
 
@@ -208,13 +208,11 @@ ParseCallResultPtr Parser::assign_expr() {
     }
 
     auto rhs = rhs_result->ast();
-    switch (rhs->GetKind()) {
-    case ASTKind::PrimaryExpr: {
+    if (rhs->GetKind() == ASTKind::PrimaryExpr) {
       auto primary_expr_ast = dynamic_cast<PrimaryExprAST *>(rhs.get());
       Token tkn = primary_expr_ast->token_;
 
-      switch (tkn.GetKind()) {
-      case TokenKind::Identifier: {
+      if (tkn.GetKind() == TokenKind::Identifier) {
         auto maybe_sym = symtab_->Retrieve(tkn.GetName());
         if (!maybe_sym.has_value()) {
           return std::make_unique<ParseCallResult>(
@@ -224,28 +222,20 @@ ParseCallResultPtr Parser::assign_expr() {
         ASTPtr node = std::make_unique<VarAssignAST>(tkn, symtab_->IsGlobal(),
                                                      std::move(rhs));
         return std::make_unique<ParseCallResult>(std::move(node));
-      }
-
-      default:
+      } else {
         return std::make_unique<ParseCallResult>(
             add_error(ParseErrorKind::InvalidAssign));
       }
-
-    case ASTKind::ArrayAccess: {
+    } else if (rhs->GetKind() == ASTKind::ArrayAccess) {
       auto array_access_ast = dynamic_cast<ArrayAccessAST *>(rhs.get());
       ASTPtr node = std::make_unique<ArrayMutExpr>(
           tkn, std::move(array_access_ast->index_), std::move(rhs));
       return std::make_unique<ParseCallResult>(std::move(node));
-    }
-
-    default:
+    } else {
       return std::make_unique<ParseCallResult>(
           add_error(ParseErrorKind::InvalidAssign));
     }
-    }
-  }
-
-  default:
+  } else {
     return std::make_unique<ParseCallResult>(
         add_error(ParseErrorKind::InvalidAssign));
   }
