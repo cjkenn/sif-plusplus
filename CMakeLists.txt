@@ -7,6 +7,9 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Compiling with debug info always!
+set(CMAKE_BUILD_TYPE RelWithDebInfo)
+
 set(SIF_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 include_directories(${SIF_SOURCE_DIR}/include)

@@ -217,9 +217,9 @@ public:
   ASTPtr index_;
 };
 
-class ArrayMutExpr : public ASTNode {
+class ArrayMutExprAST : public ASTNode {
 public:
-  ArrayMutExpr(Token array_tkn, ASTPtr index, ASTPtr rhs)
+  ArrayMutExprAST(Token array_tkn, ASTPtr index, ASTPtr rhs)
       : array_tkn_(TokenKind::Eof, 0, 0) {
     array_tkn_ = array_tkn;
     index_ = std::move(index);
@@ -229,6 +229,25 @@ public:
   Token array_tkn_;
   ASTPtr index_;
   ASTPtr rhs_;
+};
+
+class UnaryExprAST : public ASTNode {
+public:
+  UnaryExprAST(Token op_tkn, ASTPtr rhs) : op_tkn_(TokenKind::Eof, 0, 0) {
+    op_tkn_ = op_tkn;
+    rhs_ = std::move(rhs);
+  }
+
+  Token op_tkn_;
+  ASTPtr rhs_;
+};
+
+class LiteralExprAST : public ASTNode {
+public:
+  LiteralExprAST(Token lit_tkn) : lit_tkn_(TokenKind::Eof, 0, 0) {
+    lit_tkn_ = lit_tkn;
+  }
+  Token lit_tkn_;
 };
 
 } // namespace sif
