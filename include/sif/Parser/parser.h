@@ -19,6 +19,7 @@ public:
     lexer_ = std::move(lexer);
     symtab_ = std::move(symtab);
     curr_tkn_ = lexer_->Lex();
+    check_symtab_for_ident_ = true;
   }
 
   ~Parser() {}
@@ -64,6 +65,6 @@ private:
   std::unique_ptr<SymbolTable> symtab_;
   Token curr_tkn_;
   std::vector<ParseError> errors_;
-  bool should_check_sym_tab_;
+  bool check_symtab_for_ident_;
 };
 } // namespace sif

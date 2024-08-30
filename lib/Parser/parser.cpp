@@ -64,9 +64,9 @@ ParseCallResultPtr Parser::block(OptionalBlockBindings bindings) {
   symtab_->InitScope();
   if (bindings.has_value()) {
     for (auto node : bindings.value()) {
-      if (node->GetKind() == ASTKind::PrimaryExpr) {
-        auto pe = dynamic_cast<PrimaryExprAST *>(node.get());
-        symtab_->Store(pe->token_.GetName(), *node);
+      if (node->GetKind() == ASTKind::LiteralExpr) {
+        auto pe = dynamic_cast<LiteralExprAST *>(node.get());
+        symtab_->Store(pe->lit_tkn_.GetName(), *node);
       }
     }
   }
@@ -98,7 +98,7 @@ ParseCallResultPtr Parser::block(OptionalBlockBindings bindings) {
 }
 
 ParseCallResultPtr Parser::var_decl() {
-  std::optional<ParseError> next_var = Parser::match(TokenKind::Var);
+  std::optional<ParseError> next_var = match(TokenKind::Var);
   if (next_var.has_value()) {
     return std::make_unique<ParseCallResult>(next_var.value());
   }
@@ -208,9 +208,9 @@ ParseCallResultPtr Parser::assign_expr() {
     }
 
     auto rhs = rhs_result->ast();
-    if (rhs->GetKind() == ASTKind::PrimaryExpr) {
-      auto primary_expr_ast = dynamic_cast<PrimaryExprAST *>(rhs.get());
-      Token tkn = primary_expr_ast->token_;
+    if (rhs->GetKind() == ASTKind::LiteralExpr) {
+      auto primary_expr_ast = dynamic_cast<LiteralExprAST *>(rhs.get());
+      Token tkn = primary_expr_ast->lit_tkn_;
 
       if (tkn.GetKind() == TokenKind::Identifier) {
         auto maybe_sym = symtab_->Retrieve(tkn.GetName());
@@ -317,7 +317,21 @@ ParseCallResultPtr Parser::fn_call_expr() {
   }
 }
 
-ParseCallResultPtr Parser::group_expr() {}
+ParseCallResultPtr Parser::group_expr() {
+  auto has_paren = match(TokenKind::LeftParen);
+  if (has_paren.has_value()) {
+    return std::make_unique<ParseCallResult>(has_paren.value());
+  }
+
+  auto result = expr();
+
+  has_paren = match(TokenKind::RightParen);
+  if (has_paren.has_value()) {
+    return std::make_unique<ParseCallResult>(has_paren.value());
+  }
+
+  return result;
+}
 
 // Parse a literal expression. Primary refers to either primitive types/values.
 // This roughly corresponds to:
@@ -346,10 +360,29 @@ ParseCallResultPtr Parser::literal_expr() {
     return std::make_unique<ParseCallResult>(std::move(node));
   }
   case TokenKind::Identifier: {
+    auto tkn =
+        Token(curr_tkn_.GetKind(), curr_tkn_.GetPos(), curr_tkn_.GetLine());
+    if (check_symtab_for_ident_) {
+      if (!symtab_->Contains(tkn.GetName())) {
+        // TODO: check for std lib function call here
+        auto err = add_error(ParseErrorKind::UndeclaredSymbol);
+        consume();
+        return std::make_unique<ParseCallResult>(err);
+      }
+    }
+
+    ASTPtr node = std::make_unique<LiteralExprAST>(tkn);
+    consume();
+    return std::make_unique<ParseCallResult>(std::move(node));
   }
   case TokenKind::LeftParen:
     return group_expr();
   case TokenKind::At: {
+    auto has_at = match(TokenKind::At);
+    if (has_at.has_value()) {
+      return std::make_unique<ParseCallResult>(has_at.value());
+    }
+    return fn_call_expr();
   }
   default: {
     auto err = add_error(ParseErrorKind::InvalidToken);
@@ -362,7 +395,20 @@ ParseCallResultPtr Parser::literal_expr() {
 ParseCallResultPtr Parser::if_stmt() {}
 ParseCallResultPtr Parser::for_stmt() {}
 ParseCallResultPtr Parser::ret_stmt() {}
-ParseCallResultPtr Parser::expr_stmt() {}
+ParseCallResultPtr Parser::expr_stmt() {
+  auto node = expr();
+  if (node->has_error()) {
+    return node;
+  }
+
+  auto has_semi = match(TokenKind::Semicolon);
+  if (has_semi.has_value()) {
+    return std::make_unique<ParseCallResult>(has_semi.value());
+  }
+
+  ASTPtr result = std::make_unique<ExprStmtAST>(std::move(node->ast()));
+  return std::make_unique<ParseCallResult>(std::move(result));
+}
 
 std::optional<Token> Parser::match_ident() {
   switch (curr_tkn_.GetKind()) {

@@ -33,7 +33,7 @@ enum class ASTKind {
   VarAssignExpr,
   BinaryExpr,
   UnaryExpr,
-  PrimaryExpr,
+  LiteralExpr,
   Empty
 };
 
@@ -181,16 +181,6 @@ class FnDeclAST : public ASTNode {
   size_t scope_;
 };
 
-class PrimaryExprAST : public ASTNode {
-public:
-  PrimaryExprAST(Token tkn) : token_(TokenKind::Eof, 0, 0) {
-    token_ = tkn;
-    kind_ = ASTKind::PrimaryExpr;
-  }
-
-  Token token_;
-};
-
 class VarAssignAST : public ASTNode {
 public:
   VarAssignAST(Token ident_tkn, bool is_global, ASTPtr rhs)
@@ -198,6 +188,7 @@ public:
     ident_tkn_ = ident_tkn;
     is_global_ = is_global;
     rhs_ = std::move(rhs);
+    kind_ = ASTKind::VarAssignExpr;
   }
 
   Token ident_tkn_;
@@ -211,6 +202,7 @@ public:
       : array_tkn_(TokenKind::Eof, 0, 0) {
     array_tkn_ = array_tkn;
     index_ = std::move(index);
+    kind_ = ASTKind::ArrayAccess;
   }
 
   Token array_tkn_;
@@ -224,6 +216,7 @@ public:
     array_tkn_ = array_tkn;
     index_ = std::move(index);
     rhs_ = std::move(rhs);
+    kind_ = ASTKind::ArrayMutExpr;
   }
 
   Token array_tkn_;
@@ -236,6 +229,7 @@ public:
   UnaryExprAST(Token op_tkn, ASTPtr rhs) : op_tkn_(TokenKind::Eof, 0, 0) {
     op_tkn_ = op_tkn;
     rhs_ = std::move(rhs);
+    kind_ = ASTKind::UnaryExpr;
   }
 
   Token op_tkn_;
@@ -246,6 +240,7 @@ class LiteralExprAST : public ASTNode {
 public:
   LiteralExprAST(Token lit_tkn) : lit_tkn_(TokenKind::Eof, 0, 0) {
     lit_tkn_ = lit_tkn;
+    kind_ = ASTKind::LiteralExpr;
   }
   Token lit_tkn_;
 };
