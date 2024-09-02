@@ -56,6 +56,8 @@ private:
   ParseCallResultPtr group_expr();
   ParseCallResultPtr literal_expr();
 
+  ParseCallResultPtr param_list(bool could_be_expr);
+
   std::optional<Token> match_ident();
   std::optional<ParseError> match(TokenKind kind);
   void consume();

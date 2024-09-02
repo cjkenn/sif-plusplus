@@ -246,6 +246,29 @@ ParseCallResultPtr Parser::or_expr() {
   if (ast->has_error()) {
     return ast;
   }
+
+  while (true) {
+    if (curr_tkn_.GetKind() == TokenKind::DoublePipe) {
+      auto tkn =
+          Token(curr_tkn_.GetKind(), curr_tkn_.GetPos(), curr_tkn_.GetLine());
+
+      consume();
+
+      auto rhs = and_expr();
+      if (rhs->has_error()) {
+        return rhs;
+      }
+
+      ASTPtr and_ast = ast->ast();
+      ASTPtr or_ast = rhs->ast();
+      ASTPtr node = std::make_unique<BinaryExprAST>(tkn, std::move(and_ast),
+                                                    std::move(or_ast));
+      return std::make_unique<ParseCallResult>(std::move(node));
+    } else {
+      break;
+    }
+  }
+  return ast;
 }
 
 ParseCallResultPtr Parser::and_expr() {
@@ -253,6 +276,29 @@ ParseCallResultPtr Parser::and_expr() {
   if (ast->has_error()) {
     return ast;
   }
+
+  while (true) {
+    if (curr_tkn_.GetKind() == TokenKind::DoubleAmpersand) {
+      auto tkn =
+          Token(curr_tkn_.GetKind(), curr_tkn_.GetPos(), curr_tkn_.GetLine());
+
+      consume();
+
+      auto rhs = equality_expr();
+      if (rhs->has_error()) {
+        return rhs;
+      }
+
+      ASTPtr eq_ast = ast->ast();
+      ASTPtr and_ast = rhs->ast();
+      ASTPtr node = std::make_unique<BinaryExprAST>(tkn, std::move(eq_ast),
+                                                    std::move(and_ast));
+      return std::make_unique<ParseCallResult>(std::move(node));
+    } else {
+      break;
+    }
+  }
+  return ast;
 }
 
 ParseCallResultPtr Parser::equality_expr() {
@@ -260,6 +306,30 @@ ParseCallResultPtr Parser::equality_expr() {
   if (ast->has_error()) {
     return ast;
   }
+
+  while (true) {
+    if (curr_tkn_.GetKind() == TokenKind::BangEqual ||
+        curr_tkn_.GetKind() == TokenKind::EqualEqual) {
+      auto tkn =
+          Token(curr_tkn_.GetKind(), curr_tkn_.GetPos(), curr_tkn_.GetLine());
+
+      consume();
+
+      auto rhs = compare_expr();
+      if (rhs->has_error()) {
+        return rhs;
+      }
+
+      ASTPtr compare_ast = ast->ast();
+      ASTPtr eq_ast = rhs->ast();
+      ASTPtr node = std::make_unique<BinaryExprAST>(tkn, std::move(compare_ast),
+                                                    std::move(eq_ast));
+      return std::make_unique<ParseCallResult>(std::move(node));
+    } else {
+      break;
+    }
+  }
+  return ast;
 }
 
 ParseCallResultPtr Parser::compare_expr() {
@@ -267,6 +337,33 @@ ParseCallResultPtr Parser::compare_expr() {
   if (ast->has_error()) {
     return ast;
   }
+
+  auto curr_kind = curr_tkn_.GetKind();
+  while (true) {
+    if (curr_kind == TokenKind::LessThan ||
+        curr_kind == TokenKind::LessThanEqual ||
+        curr_kind == TokenKind::GreaterThan ||
+        curr_kind == TokenKind::GreaterThanEqual) {
+      auto tkn =
+          Token(curr_tkn_.GetKind(), curr_tkn_.GetPos(), curr_tkn_.GetLine());
+
+      consume();
+
+      auto rhs = add_or_sub_expr();
+      if (rhs->has_error()) {
+        return rhs;
+      }
+
+      ASTPtr addsub_ast = ast->ast();
+      ASTPtr compare_ast = rhs->ast();
+      ASTPtr node = std::make_unique<BinaryExprAST>(tkn, std::move(addsub_ast),
+                                                    std::move(compare_ast));
+      return std::make_unique<ParseCallResult>(std::move(node));
+    } else {
+      break;
+    }
+  }
+  return ast;
 }
 
 ParseCallResultPtr Parser::add_or_sub_expr() {
@@ -274,6 +371,30 @@ ParseCallResultPtr Parser::add_or_sub_expr() {
   if (ast->has_error()) {
     return ast;
   }
+
+  while (true) {
+    if (curr_tkn_.GetKind() == TokenKind::Plus ||
+        curr_tkn_.GetKind() == TokenKind::Minus) {
+      auto tkn =
+          Token(curr_tkn_.GetKind(), curr_tkn_.GetPos(), curr_tkn_.GetLine());
+
+      consume();
+
+      auto rhs = mul_or_div_expr();
+      if (rhs->has_error()) {
+        return rhs;
+      }
+
+      ASTPtr muldiv_ast = ast->ast();
+      ASTPtr addsub_ast = rhs->ast();
+      ASTPtr node = std::make_unique<BinaryExprAST>(tkn, std::move(muldiv_ast),
+                                                    std::move(addsub_ast));
+      return std::make_unique<ParseCallResult>(std::move(node));
+    } else {
+      break;
+    }
+  }
+  return ast;
 }
 
 ParseCallResultPtr Parser::mul_or_div_expr() {
@@ -281,6 +402,30 @@ ParseCallResultPtr Parser::mul_or_div_expr() {
   if (ast->has_error()) {
     return ast;
   }
+
+  while (true) {
+    if (curr_tkn_.GetKind() == TokenKind::Star ||
+        curr_tkn_.GetKind() == TokenKind::Slash) {
+      auto tkn =
+          Token(curr_tkn_.GetKind(), curr_tkn_.GetPos(), curr_tkn_.GetLine());
+
+      consume();
+
+      auto rhs = modulo_expr();
+      if (rhs->has_error()) {
+        return rhs;
+      }
+
+      ASTPtr modulo_ast = ast->ast();
+      ASTPtr muldiv_ast = rhs->ast();
+      ASTPtr node = std::make_unique<BinaryExprAST>(tkn, std::move(modulo_ast),
+                                                    std::move(muldiv_ast));
+      return std::make_unique<ParseCallResult>(std::move(node));
+    } else {
+      break;
+    }
+  }
+  return ast;
 }
 
 ParseCallResultPtr Parser::modulo_expr() {
@@ -288,6 +433,29 @@ ParseCallResultPtr Parser::modulo_expr() {
   if (ast->has_error()) {
     return ast;
   }
+
+  while (true) {
+    if (curr_tkn_.GetKind() == TokenKind::Percent) {
+      auto tkn =
+          Token(curr_tkn_.GetKind(), curr_tkn_.GetPos(), curr_tkn_.GetLine());
+
+      consume();
+
+      auto rhs = unary_expr();
+      if (rhs->has_error()) {
+        return rhs;
+      }
+
+      ASTPtr unary_ast = ast->ast();
+      ASTPtr modulo_ast = rhs->ast();
+      ASTPtr node = std::make_unique<BinaryExprAST>(tkn, std::move(unary_ast),
+                                                    std::move(modulo_ast));
+      return std::make_unique<ParseCallResult>(std::move(node));
+    } else {
+      break;
+    }
+  }
+  return ast;
 }
 
 ParseCallResultPtr Parser::unary_expr() {
@@ -311,10 +479,87 @@ ParseCallResultPtr Parser::unary_expr() {
 }
 
 ParseCallResultPtr Parser::fn_call_expr() {
-  auto ast = literal_expr();
-  if (ast->has_error()) {
-    return ast;
+  auto result = literal_expr();
+  if (result->has_error()) {
+    return result;
   }
+
+  auto ast = result->ast();
+  std::vector<ASTPtr> params;
+  std::optional<Token> ident_tkn = std::nullopt;
+
+  if (ast->GetKind() == ASTKind::LiteralExpr) {
+    auto lit_ast = dynamic_cast<LiteralExprAST *>(ast.get());
+    ident_tkn = std::make_optional<Token>(lit_ast->lit_tkn_);
+  }
+
+  switch (curr_tkn_.GetKind()) {
+  case TokenKind::LeftParen: {
+    auto is_lparen = match(TokenKind::LeftParen);
+    if (is_lparen.has_value()) {
+      return std::make_unique<ParseCallResult>(is_lparen.value());
+    }
+
+    auto params_result = param_list(true);
+    if (params_result->has_error()) {
+      return params_result;
+    }
+    auto param_ast = params_result->ast();
+    auto inner = dynamic_cast<ParamListAST *>(param_ast.get());
+    params = std::move(inner->params_);
+  }
+  }
+}
+
+ParseCallResultPtr Parser::param_list(bool could_be_expr) {
+  if (curr_tkn_.GetKind() == TokenKind::RightParen) {
+    // Empty param list
+    ASTPtr node = std::make_unique<ParamListAST>(std::vector<ASTPtr>());
+    return std::make_unique<ParseCallResult>(std::move(node));
+  }
+
+  std::vector<ASTPtr> param_list;
+  while (curr_tkn_.GetKind() != TokenKind::RightParen) {
+    if (param_list.size() >= FN_PARAM_MAX_LEN) {
+      auto err = add_error(ParseErrorKind::FnParamCountExceeded);
+      return std::make_unique<ParseCallResult>(err);
+    }
+
+    if (curr_tkn_.GetKind() == TokenKind::Eof) {
+      auto err = add_error(ParseErrorKind::InvalidToken);
+      return std::make_unique<ParseCallResult>(err);
+    }
+
+    if (could_be_expr) {
+      // Parsing a call here, so the params could be expressions
+      auto param = expr();
+      if (param->has_error()) {
+        return param;
+      }
+      param_list.push_back(param->ast());
+    } else {
+      // Parsing a declaration here, so params are only identifiers
+      auto maybe_ident_tkn = match_ident();
+      if (!maybe_ident_tkn.has_value()) {
+        auto err = add_error(ParseErrorKind::ExpectedIdent);
+        return std::make_unique<ParseCallResult>(err);
+      }
+
+      auto ident_tkn = maybe_ident_tkn.value();
+      ASTPtr next_param = std::make_unique<LiteralExprAST>(ident_tkn);
+      param_list.push_back(std::move(next_param));
+    }
+
+    if (curr_tkn_.GetKind() != TokenKind::RightParen) {
+      auto is_comma = match(TokenKind::Comma);
+      if (is_comma.has_value()) {
+        return std::make_unique<ParseCallResult>(is_comma.value());
+      }
+    }
+  }
+
+  ASTPtr node = std::make_unique<ParamListAST>(std::move(param_list));
+  return std::make_unique<ParseCallResult>(std::move(node));
 }
 
 ParseCallResultPtr Parser::group_expr() {
@@ -333,8 +578,8 @@ ParseCallResultPtr Parser::group_expr() {
   return result;
 }
 
-// Parse a literal expression. Primary refers to either primitive types/values.
-// This roughly corresponds to:
+// Parse a literal expression. Primary refers to either primitive
+// types/values. This roughly corresponds to:
 // 1. Number literals
 // 2. String literals
 // 3. Boolean literals

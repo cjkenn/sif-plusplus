@@ -181,6 +181,13 @@ class FnDeclAST : public ASTNode {
   size_t scope_;
 };
 
+class ParamListAST : public ASTNode {
+public:
+  ParamListAST(std::vector<ASTPtr> params) { params_ = std::move(params); }
+
+  std::vector<ASTPtr> params_;
+};
+
 class VarAssignAST : public ASTNode {
 public:
   VarAssignAST(Token ident_tkn, bool is_global, ASTPtr rhs)
@@ -221,6 +228,21 @@ public:
 
   Token array_tkn_;
   ASTPtr index_;
+  ASTPtr rhs_;
+};
+
+class BinaryExprAST : public ASTNode {
+public:
+  BinaryExprAST(Token op_tkn, ASTPtr lhs, ASTPtr rhs)
+      : op_tkn_(TokenKind::Eof, 0, 0) {
+    op_tkn_ = op_tkn;
+    lhs_ = std::move(lhs);
+    rhs_ = std::move(rhs);
+    kind_ = ASTKind::BinaryExpr;
+  }
+
+  Token op_tkn_;
+  ASTPtr lhs_;
   ASTPtr rhs_;
 };
 
