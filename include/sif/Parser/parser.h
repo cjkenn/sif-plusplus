@@ -9,7 +9,7 @@
 #include <optional>
 
 namespace sif {
-typedef std::optional<std::vector<std::shared_ptr<ASTNode>>>
+typedef std::optional<std::vector<std::unique_ptr<ASTNode>>>
     OptionalBlockBindings;
 
 class Parser {

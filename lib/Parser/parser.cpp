@@ -64,7 +64,10 @@ ParseCallResultPtr Parser::block(OptionalBlockBindings bindings) {
 
   symtab_->InitScope();
   if (bindings.has_value()) {
-    for (auto node : bindings.value()) {
+    auto bindings_val = std::move(bindings.value());
+
+    for (int i = 0; i < bindings_val.size(); i++) {
+      auto node = std::move(bindings_val[i]);
       if (node->GetKind() == ASTKind::LiteralExpr) {
         auto pe = dynamic_cast<LiteralExprAST *>(node.get());
         symtab_->Store(pe->lit_tkn_.GetName(), *node);
@@ -194,6 +197,14 @@ ParseCallResultPtr Parser::fn_decl() {
 
   auto params_ast = params_result->ast();
   ParamListAST *param_list_ast = dynamic_cast<ParamListAST *>(params_ast.get());
+
+  auto bindings = std::make_optional<std::vector<ASTPtr>>(
+      std::move(param_list_ast->params_));
+
+  auto body = block(std::move(bindings));
+  if (body->has_error()) {
+    return ParseResultFactory::from_err(body->error());
+  }
 }
 
 ParseCallResultPtr Parser::table_decl(Token ident_tkn) {}

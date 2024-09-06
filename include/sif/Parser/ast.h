@@ -8,6 +8,7 @@
 namespace sif {
 class ASTNode;
 typedef std::unique_ptr<ASTNode> ASTPtr;
+typedef std::shared_ptr<ASTNode> SharedASTPtr;
 
 enum class ASTKind {
   Program,
