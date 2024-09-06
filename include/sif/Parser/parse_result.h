@@ -61,7 +61,7 @@ private:
   std::unique_ptr<ParseError> err_;
 };
 
-class ParseCallResultFactory {
+class ParseResultFactory {
 public:
   static ParseCallResultPtr from_ast(ASTPtr node) {
     return std::make_unique<ParseCallResult>(std::move(node));

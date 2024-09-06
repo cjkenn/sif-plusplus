@@ -569,8 +569,7 @@ ParseCallResultPtr Parser::fn_call_expr() {
 
     ASTPtr node = std::make_unique<ArrayAccessAST>(maybe_ident_tkn.value(),
                                                    std::move(idx->ast()));
-    return ParseCallResultFactory::from_ast(std::move(node));
-    // return std::make_unique<ParseCallResult>(std::move(node));
+    return ParseResultFactory::from_ast(std::move(node));
   }
   default:
     break;
