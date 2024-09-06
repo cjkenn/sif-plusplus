@@ -160,7 +160,42 @@ ParseCallResultPtr Parser::var_decl() {
   }
 }
 
-ParseCallResultPtr Parser::fn_decl() {}
+ParseCallResultPtr Parser::fn_decl() {
+  auto is_fn = match(TokenKind::Fn);
+  if (is_fn.has_value()) {
+    return ParseResultFactory::from_err(is_fn.value());
+  }
+
+  auto maybe_ident_tkn = match_ident();
+  if (!maybe_ident_tkn.has_value()) {
+    auto err = add_error(ParseErrorKind::ExpectedIdent);
+    return ParseResultFactory::from_err(err);
+  }
+
+  auto ident_tkn = maybe_ident_tkn.value();
+
+  // Placeholder to ensure recursive calls will parse correctly.
+  symtab_->Store(ident_tkn.GetName(), EmptyAST());
+
+  auto is_lparen = match(TokenKind::LeftParen);
+  if (is_lparen.has_value()) {
+    return ParseResultFactory::from_err(is_lparen.value());
+  }
+
+  auto params_result = param_list(false);
+  if (params_result->has_error()) {
+    return ParseResultFactory::from_err(params_result->error());
+  }
+
+  auto is_rparen = match(TokenKind::RightParen);
+  if (is_rparen.has_value()) {
+    return ParseResultFactory::from_err(is_rparen.value());
+  }
+
+  auto params_ast = params_result->ast();
+  ParamListAST *param_list_ast = dynamic_cast<ParamListAST *>(params_ast.get());
+}
+
 ParseCallResultPtr Parser::table_decl(Token ident_tkn) {}
 ParseCallResultPtr Parser::array_decl(Token ident_tkn) {}
 
@@ -541,12 +576,14 @@ ParseCallResultPtr Parser::fn_call_expr() {
     if (is_period.has_value()) {
       return std::make_unique<ParseCallResult>(is_period.value());
     }
+
     check_symtab_for_ident_ = false;
     auto val = expr();
     if (val->has_error()) {
       return std::make_unique<ParseCallResult>(val->error());
     }
     check_symtab_for_ident_ = true;
+
     ASTPtr node = std::make_unique<TableAccessAST>(maybe_ident_tkn.value(),
                                                    std::move(val->ast()));
     return std::make_unique<ParseCallResult>(std::move(node));

@@ -297,4 +297,9 @@ public:
   Token lit_tkn_;
 };
 
+class EmptyAST : public ASTNode {
+public:
+  EmptyAST() { kind_ = ASTKind::Empty; }
+};
+
 } // namespace sif
