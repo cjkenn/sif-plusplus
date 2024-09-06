@@ -1,9 +1,7 @@
 add_library(Parser
   lexer.cpp
   parser.cpp
-  parse_result.cpp
   ast.cpp
-  parse_error.cpp
   symbol_table.cpp
   token.cpp
 )

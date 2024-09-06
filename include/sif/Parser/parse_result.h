@@ -60,4 +60,15 @@ private:
   ASTPtr ast_;
   std::unique_ptr<ParseError> err_;
 };
+
+class ParseCallResultFactory {
+public:
+  static ParseCallResultPtr from_ast(ASTPtr node) {
+    return std::make_unique<ParseCallResult>(std::move(node));
+  }
+
+  static ParseCallResultPtr from_err(ParseError err) {
+    return std::make_unique<ParseCallResult>(err);
+  }
+};
 } // namespace sif
