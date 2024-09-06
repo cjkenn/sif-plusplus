@@ -1,5 +1,6 @@
 #include "sif/Parser/parser.h"
 #include "sif/Parser/parse_result.h"
+#include "sif/Parser/reserved.h"
 #include "sif/Parser/token.h"
 #include <cassert>
 #include <memory>
@@ -486,11 +487,11 @@ ParseCallResultPtr Parser::fn_call_expr() {
 
   auto ast = result->ast();
   std::vector<ASTPtr> params;
-  std::optional<Token> ident_tkn = std::nullopt;
+  std::optional<Token> maybe_ident_tkn = std::nullopt;
 
   if (ast->GetKind() == ASTKind::LiteralExpr) {
     auto lit_ast = dynamic_cast<LiteralExprAST *>(ast.get());
-    ident_tkn = std::make_optional<Token>(lit_ast->lit_tkn_);
+    maybe_ident_tkn = std::make_optional<Token>(lit_ast->lit_tkn_);
   }
 
   switch (curr_tkn_.GetKind()) {
@@ -507,8 +508,74 @@ ParseCallResultPtr Parser::fn_call_expr() {
     auto param_ast = params_result->ast();
     auto inner = dynamic_cast<ParamListAST *>(param_ast.get());
     params = std::move(inner->params_);
+
+    auto ident_name = maybe_ident_tkn.value().GetName();
+    auto maybe_ast = symtab_->Retrieve(ident_name);
+    bool is_std = is_std_lib_fn(ident_name);
+
+    // TODO: check for recursive calls here
+
+    // if maybe_ast does not have a value, then we assume that
+    // the symbol is undeclared, UNLESS it's a builtin function
+    if (!maybe_ast.has_value() && !is_std) {
+      auto err = add_error(ParseErrorKind::UndeclaredSymbol);
+      consume();
+      return std::make_unique<ParseCallResult>(err);
+    }
+
+    FnDeclAST &ast = static_cast<FnDeclAST &>(maybe_ast.value());
+    ParamListAST *declared_params =
+        dynamic_cast<ParamListAST *>(ast.params_.get());
+
+    if (!is_std && (declared_params->params_.size() != params.size())) {
+      auto err = add_error(ParseErrorKind::WrongFnParamCount);
+      return std::make_unique<ParseCallResult>(err);
+    }
+
+    ASTPtr node = std::make_unique<FnCallExprAST>(maybe_ident_tkn.value(),
+                                                  std::move(params), is_std);
+    return std::make_unique<ParseCallResult>(std::move(node));
   }
+  case TokenKind::Period: {
+    auto is_period = match(TokenKind::Period);
+    if (is_period.has_value()) {
+      return std::make_unique<ParseCallResult>(is_period.value());
+    }
+    check_symtab_for_ident_ = false;
+    auto val = expr();
+    if (val->has_error()) {
+      return std::make_unique<ParseCallResult>(val->error());
+    }
+    check_symtab_for_ident_ = true;
+    ASTPtr node = std::make_unique<TableAccessAST>(maybe_ident_tkn.value(),
+                                                   std::move(val->ast()));
+    return std::make_unique<ParseCallResult>(std::move(node));
   }
+  case TokenKind::LeftBracket: {
+    auto is_lbrack = match(TokenKind::LeftBracket);
+    if (is_lbrack.has_value()) {
+      return std::make_unique<ParseCallResult>(is_lbrack.value());
+    }
+
+    auto idx = expr();
+    if (idx->has_error()) {
+      return std::make_unique<ParseCallResult>(idx->error());
+    }
+
+    auto is_rbrack = match(TokenKind::RightBracket);
+    if (is_rbrack.has_value()) {
+      return std::make_unique<ParseCallResult>(is_rbrack.value());
+    }
+
+    ASTPtr node = std::make_unique<ArrayAccessAST>(maybe_ident_tkn.value(),
+                                                   std::move(idx->ast()));
+    return std::make_unique<ParseCallResult>(std::move(node));
+  }
+  default:
+    break;
+  }
+
+  return std::make_unique<ParseCallResult>(std::move(ast));
 }
 
 ParseCallResultPtr Parser::param_list(bool could_be_expr) {

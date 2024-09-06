@@ -165,8 +165,10 @@ public:
 };
 
 class FnDeclAST : public ASTNode {
+public:
   FnDeclAST(std::unique_ptr<Token> ident_token, ASTPtr params, ASTPtr body,
             size_t scope) {
+    kind_ = ASTKind::FnDecl;
     ident_token_ = std::move(ident_token);
     params_ = std::move(params);
     body_ = std::move(body);
@@ -179,6 +181,21 @@ class FnDeclAST : public ASTNode {
   ASTPtr params_;
   ASTPtr body_;
   size_t scope_;
+};
+
+class FnCallExprAST : public ASTNode {
+public:
+  FnCallExprAST(Token fn_ident_tkn, std::vector<ASTPtr> fn_params, bool is_std)
+      : fn_ident_tkn_(TokenKind::Eof, 0, 0) {
+    kind_ = ASTKind::FnCallExpr;
+    fn_ident_tkn_ = fn_ident_tkn;
+    fn_params_ = std::move(fn_params);
+    is_std_ = is_std;
+  }
+
+  Token fn_ident_tkn_;
+  std::vector<ASTPtr> fn_params_;
+  bool is_std_;
 };
 
 class ParamListAST : public ASTNode {
@@ -201,6 +218,19 @@ public:
   Token ident_tkn_;
   bool is_global_;
   ASTPtr rhs_;
+};
+
+class TableAccessAST : public ASTNode {
+public:
+  TableAccessAST(Token table_tkn, ASTPtr index)
+      : table_tkn_(TokenKind::Eof, 0, 0) {
+    kind_ = ASTKind::TableAccess;
+    table_tkn_ = table_tkn;
+    index_ = std::move(index);
+  }
+
+  Token table_tkn_;
+  ASTPtr index_;
 };
 
 class ArrayAccessAST : public ASTNode {

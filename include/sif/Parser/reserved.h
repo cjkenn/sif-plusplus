@@ -1,6 +1,7 @@
 #pragma once
 
 #include "sif/Parser/token.h"
+#include <set>
 #include <string>
 #include <unordered_map>
 
@@ -16,4 +17,14 @@ inline std::unordered_map<std::string, TokenKind> get_reserved_words() {
   };
   return reserved;
 }
+
+inline std::set<std::string> get_reserved_fns() {
+  std::set<std::string> reserved = {"print", "range"};
+  return reserved;
+}
+
+inline bool is_std_lib_fn(std::string name) {
+  return get_reserved_fns().contains(name);
+}
+
 } // namespace sif

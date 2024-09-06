@@ -18,6 +18,7 @@ std::string Token::GetName() {
     return Token::GetIdentLit().value();
     // TODO: include reserved words here?
   default:
+    assert(false && "GetName should not be called on a token with no name.");
     return "";
   }
 }
