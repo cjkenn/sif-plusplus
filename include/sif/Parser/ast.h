@@ -71,7 +71,6 @@ public:
 
   ~BlockAST() {}
 
-private:
   std::vector<ASTPtr> decls_;
   size_t scope_;
 };

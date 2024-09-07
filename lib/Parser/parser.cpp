@@ -205,6 +205,42 @@ ParseCallResultPtr Parser::fn_decl() {
   if (body->has_error()) {
     return ParseResultFactory::from_err(body->error());
   }
+
+  auto ast = body->ast();
+
+  BlockAST *body_ast = dynamic_cast<BlockAST *>(ast.get());
+  ASTPtr body_w_ret;
+
+  if (body_ast->decls_.size() == 0) {
+    std::vector<ASTPtr> next_decls;
+    ASTPtr wret = std::make_unique<ReturnStmtAST>(std::nullopt);
+    next_decls.push_back(std::move(wret));
+    body_w_ret =
+        std::make_unique<BlockAST>(std::move(next_decls), body_ast->scope_);
+  } else {
+    size_t last_idx = body_ast->decls_.size() - 1;
+    auto last_node = std::move(body_ast->decls_[last_idx]);
+
+    switch (last_node->GetKind()) {
+    case ASTKind::ReturnStmt:
+      body_w_ret = std::make_unique<BlockAST>(std::move(body_ast->decls_),
+                                              body_ast->scope_);
+    default: {
+      std::vector<ASTPtr> next_decls;
+      ASTPtr wret = std::make_unique<ReturnStmtAST>(std::nullopt);
+      next_decls.push_back(std::move(wret));
+      body_w_ret =
+          std::make_unique<BlockAST>(std::move(next_decls), body_ast->scope_);
+    }
+    }
+  }
+
+  ASTPtr node = std::make_unique<FnDeclAST>(
+      std::make_unique<Token>(ident_tkn), std::move(params_ast),
+      std::move(body_w_ret), symtab_->Level());
+
+  symtab_->Store(ident_tkn.GetName(), *node.get());
+  return ParseResultFactory::from_ast(std::move(node));
 }
 
 ParseCallResultPtr Parser::table_decl(Token ident_tkn) {}
