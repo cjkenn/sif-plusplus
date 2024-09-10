@@ -25,10 +25,12 @@ public:
     line_ = line;
     pos_ = pos;
   };
-
-  void Emit() { std::cerr << "sif: Parse error - " << error_to_msg() << "\n"; }
-
   ~ParseError() {}
+
+  ParseErrorKind Kind() { return kind_; }
+  int Line() { return line_; }
+  int Pos() { return pos_; }
+  void Emit() { std::cerr << "sif: Parse error - " << error_to_msg() << "\n"; }
 
 private:
   std::string error_to_msg();

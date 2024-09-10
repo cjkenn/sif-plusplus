@@ -15,6 +15,9 @@ ParseFullResult Parser::Parse() {
   while (curr_tkn_.GetKind() != TokenKind::Eof) {
     auto result = decl();
     if (result->has_ast()) {
+      assert(result->has_error() == false &&
+             "AST found, so result should not have any errors.");
+
       blocks.push_back(std::move(result->ast()));
     } else {
       found_error = true;
@@ -745,8 +748,30 @@ ParseCallResultPtr Parser::group_expr() {
 //              groupexpr ;
 ParseCallResultPtr Parser::literal_expr() {
   switch (curr_tkn_.GetKind()) {
-  case TokenKind::StringLiteral:
-  case TokenKind::NumberLiteral:
+  case TokenKind::StringLiteral: {
+    assert(curr_tkn_.GetStringLit().has_value() &&
+           "Current string literal token should have a value");
+
+    auto tkn = TokenFactory::MakeStringLiteralToken(
+        curr_tkn_.GetPos(), curr_tkn_.GetLine(),
+        curr_tkn_.GetStringLit().value());
+    ASTPtr node = std::make_unique<LiteralExprAST>(tkn);
+    consume();
+    return std::make_unique<ParseCallResult>(std::move(node));
+  }
+
+  case TokenKind::NumberLiteral: {
+    assert(curr_tkn_.GetNumberLit().has_value() &&
+           "Current number literal token should have a value");
+
+    auto tkn = TokenFactory::MakeNumberLiteralToken(
+        curr_tkn_.GetPos(), curr_tkn_.GetLine(),
+        curr_tkn_.GetNumberLit().value());
+    ASTPtr node = std::make_unique<LiteralExprAST>(tkn);
+    consume();
+    return std::make_unique<ParseCallResult>(std::move(node));
+  }
+
   case TokenKind::True:
   case TokenKind::False: {
     auto tkn =
@@ -755,9 +780,15 @@ ParseCallResultPtr Parser::literal_expr() {
     consume();
     return std::make_unique<ParseCallResult>(std::move(node));
   }
+
   case TokenKind::Identifier: {
+    assert(curr_tkn_.GetIdentLit().has_value() &&
+           "Current identifier token should have a value");
+
     auto tkn =
-        Token(curr_tkn_.GetKind(), curr_tkn_.GetPos(), curr_tkn_.GetLine());
+        TokenFactory::MakeIdentToken(curr_tkn_.GetPos(), curr_tkn_.GetLine(),
+                                     curr_tkn_.GetIdentLit().value());
+
     if (check_symtab_for_ident_) {
       if (!symtab_->Contains(tkn.GetName())) {
         // TODO: check for std lib function call here
@@ -771,8 +802,10 @@ ParseCallResultPtr Parser::literal_expr() {
     consume();
     return std::make_unique<ParseCallResult>(std::move(node));
   }
+
   case TokenKind::LeftParen:
     return group_expr();
+
   case TokenKind::At: {
     auto has_at = match(TokenKind::At);
     if (has_at.has_value()) {
@@ -780,6 +813,7 @@ ParseCallResultPtr Parser::literal_expr() {
     }
     return fn_call_expr();
   }
+
   default: {
     auto err = add_error(ParseErrorKind::InvalidToken);
     consume();

@@ -84,16 +84,16 @@ public:
   int GetLine() const { return line_; }
   std::optional<std::string> GetStringLit() const { return str_lit_; }
   std::optional<std::string> GetIdentLit() const { return ident_lit_; }
-  std::optional<std::string> GetNumLit() const { return num_lit_; }
+  std::optional<std::string> GetNumberLit() const { return num_lit_; }
   void SetPos(int pos) { pos_ = pos; }
   void SetLine(int line) { line_ = line; }
-  void SetStrLit(std::string lit) {
+  void SetStringLit(std::string lit) {
     str_lit_ = std::make_optional<std::string>(lit);
   }
   void SetIdentLit(std::string lit) {
     ident_lit_ = std::make_optional<std::string>(lit);
   }
-  void SetNumLit(std::string lit) {
+  void SetNumberLit(std::string lit) {
     num_lit_ = std::make_optional<std::string>(lit);
   }
   std::string GetName();
@@ -107,5 +107,26 @@ private:
   std::optional<std::string> str_lit_;
   std::optional<std::string> ident_lit_;
   std::optional<std::string> num_lit_;
+};
+
+class TokenFactory {
+public:
+  static Token MakeIdentToken(int pos, int line, std::string ident) {
+    Token t = Token(TokenKind::Identifier, pos, line);
+    t.SetIdentLit(ident);
+    return t;
+  }
+
+  static Token MakeStringLiteralToken(int pos, int line, std::string literal) {
+    Token t = Token(TokenKind::StringLiteral, pos, line);
+    t.SetStringLit(literal);
+    return t;
+  }
+
+  static Token MakeNumberLiteralToken(int pos, int line, std::string literal) {
+    Token t = Token(TokenKind::StringLiteral, pos, line);
+    t.SetNumberLit(literal);
+    return t;
+  }
 };
 } // namespace sif

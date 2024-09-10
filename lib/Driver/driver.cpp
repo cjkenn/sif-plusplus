@@ -17,4 +17,6 @@ void Driver::run() {
   auto result = parser.Parse();
   assert(result.contains_error_ == false);
   assert(result.ast_ != nullptr);
+  assert(result.ast_.GetKind() == ASTKind::Program);
+  std::cout << "Parsing successful\n";
 }

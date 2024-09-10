@@ -264,14 +264,14 @@ Token Lexer::lex_ident() {
 
 Token Lexer::consume_str_lit(std::string str, int pos, int line) {
   Token tkn = Token(TokenKind::StringLiteral, pos, line);
-  tkn.SetStrLit(str);
+  tkn.SetStringLit(str);
   advance();
   return tkn;
 }
 
 Token Lexer::consume_num_lit(std::string num, int pos, int line) {
   Token tkn = Token(TokenKind::NumberLiteral, pos, line);
-  tkn.SetNumLit(num);
+  tkn.SetNumberLit(num);
   advance();
   return tkn;
 }

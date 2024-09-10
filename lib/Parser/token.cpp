@@ -26,7 +26,7 @@ std::string Token::GetName() {
 float Token::GetNumber() {
   switch (kind_) {
   case TokenKind::NumberLiteral:
-    return stof(GetNumLit().value_or("0"));
+    return stof(GetNumberLit().value_or("0"));
   default:
     return 0.0;
   }
